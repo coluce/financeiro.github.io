@@ -1,23 +1,25 @@
 <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div class="form-adicionar">
         <h1>Movimentações</h1>
         <button class="btn btn-primary" onclick="abrirModalNovaMovimentacao()">+ Novo</button>
     </div>
 
-    <table id="tabelaMovimentacoes" class="table">
-        <thead>
-            <tr>
-                <th>Mês/Ano</th>
-                <th>Status</th>
-                <th>Receitas</th>
-                <th>Despesas</th>
-                <th>Saldo</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="corpoTabelaMovimentacoes">
-        </tbody>
-    </table>
+    <div class="tabela-container">
+        <table id="tabelaMovimentacoes" class="tabela-categorias">
+            <thead>
+                <tr>
+                    <th>Mês/Ano</th>
+                    <th>Status</th>
+                    <th>Receitas</th>
+                    <th>Despesas</th>
+                    <th>Saldo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="corpoTabelaMovimentacoes">
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Modal para criar nova movimentação -->
@@ -99,7 +101,7 @@
             Lançamentos do Mês
             <button class="btn btn-sm btn-primary" onclick="abrirModalNovoItemAvulso()">+ Adicionar Item Avulso</button>
         </h3>
-        <table id="tabelaLancamentosMovimentacao" class="table">
+        <table id="tabelaLancamentosMovimentacao" class="tabela-categorias">
             <thead>
                 <tr>
                     <th>Descrição</th>
