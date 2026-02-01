@@ -95,7 +95,10 @@
             </div>
         </div>
 
-        <h3>Lançamentos do Mês</h3>
+        <h3 style="display: flex; justify-content: space-between; align-items: center;">
+            Lançamentos do Mês
+            <button class="btn btn-sm btn-primary" onclick="abrirModalNovoItemAvulso()">+ Adicionar Item Avulso</button>
+        </h3>
         <table id="tabelaLancamentosMovimentacao" class="table">
             <thead>
                 <tr>
@@ -116,5 +119,128 @@
             <button type="button" class="btn btn-secondary" onclick="fecharModalEdicaoMovimentacao()">Cancelar</button>
             <button type="button" class="btn btn-primary" onclick="salvarStatusMovimentacao()">Salvar</button>
         </div>
+    </div>
+</div>
+
+<!-- Modal para adicionar/editar item avulso -->
+<div id="modalNovoItemAvulso" class="modal" onclick="fecharModalNovoItemAvulso(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTituloItemAvulso">Adicionar Item Avulso</h2>
+            <button class="modal-close" onclick="fecharModalNovoItemAvulso()">&times;</button>
+        </div>
+
+        <form id="formNovoItemAvulso" onsubmit="salvarNovoItemAvulso(event)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="itemAvulsoDescricao">Descrição:</label>
+                    <input type="text" id="itemAvulsoDescricao" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemAvulsoValor">Valor:</label>
+                    <input type="number" id="itemAvulsoValor" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemAvulsoTipo">Tipo:</label>
+                    <select id="itemAvulsoTipo" required>
+                        <option value="">-- Selecione --</option>
+                        <option value="Receita">Receita</option>
+                        <option value="Despesa">Despesa</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemAvulsoVencimento">Data de Vencimento:</label>
+                    <input type="date" id="itemAvulsoVencimento" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemAvulsoStatus">Status:</label>
+                    <select id="itemAvulsoStatus" required>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Pago">Pago</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="itemAvulsoObservacoes">Observações:</label>
+                    <textarea id="itemAvulsoObservacoes" style="width: 100%; min-height: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="fecharModalNovoItemAvulso()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Adicionar Item</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para editar item vinculado a lançamento -->
+<div id="modalEdicaoItemLancamento" class="modal" onclick="fecharModalEdicaoItemLancamento(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTituloItemLancamento">Editar Item de Lançamento</h2>
+            <button class="modal-close" onclick="fecharModalEdicaoItemLancamento()">&times;</button>
+        </div>
+
+        <form id="formEdicaoItemLancamento" onsubmit="salvarEdicaoItemLancamento(event)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="itemLancDescricao">Fornecedor:</label>
+                    <input type="text" id="itemLancDescricao" disabled style="background-color: #f0f0f0;">
+                </div>
+
+                <div class="form-group">
+                    <label for="itemLancValorBruto">Valor Bruto:</label>
+                    <input type="number" id="itemLancValorBruto" step="0.01" disabled style="background-color: #f0f0f0;">
+                </div>
+
+                <div class="form-group">
+                    <label for="itemLancDesconto">Desconto:</label>
+                    <input type="number" id="itemLancDesconto" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemLancAcrescimo">Acréscimo:</label>
+                    <input type="number" id="itemLancAcrescimo" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemLancValorLiquido">Valor Líquido:</label>
+                    <input type="number" id="itemLancValorLiquido" step="0.01" disabled style="background-color: #f0f0f0;">
+                </div>
+
+                <div class="form-group">
+                    <label for="itemLancStatus">Status:</label>
+                    <select id="itemLancStatus" required>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Pago">Pago</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemLancVencimento">Data de Vencimento:</label>
+                    <input type="date" id="itemLancVencimento" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemLancPagamento">Data de Pagamento:</label>
+                    <input type="date" id="itemLancPagamento">
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="itemLancObservacoes">Observações:</label>
+                    <textarea id="itemLancObservacoes" style="width: 100%; min-height: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="fecharModalEdicaoItemLancamento()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+        </form>
     </div>
 </div>

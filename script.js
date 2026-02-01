@@ -922,12 +922,21 @@ function calcularTotalReceitas(movimentacaoId) {
     return itens
         .filter(item => item.movimentacaoId === movimentacaoId)
         .reduce((total, item) => {
-            const lancamento = carregarLancamentos().find(l => l.id === item.idLancamento);
-            const categoria = categorias.find(c => c.id === lancamento?.categoriaId);
-            if (categoria && categoria.tipo === 'Receita') {
-                const valorLiquido = item.valorLiquido || lancamento.valorBruto;
-                return total + valorLiquido;
+            // Item avulso
+            if (item.isAvulso && item.tipo === 'Receita') {
+                return total + item.valor;
             }
+            
+            // Item vinculado a lançamento
+            if (!item.isAvulso) {
+                const lancamento = carregarLancamentos().find(l => l.id === item.idLancamento);
+                const categoria = categorias.find(c => c.id === lancamento?.categoriaId);
+                if (categoria && categoria.tipo === 'Receita') {
+                    const valorLiquido = item.valorLiquido || lancamento.valorBruto;
+                    return total + valorLiquido;
+                }
+            }
+            
             return total;
         }, 0);
 }
@@ -940,17 +949,28 @@ function calcularTotalDespesas(movimentacaoId) {
     return itens
         .filter(item => item.movimentacaoId === movimentacaoId)
         .reduce((total, item) => {
-            const lancamento = carregarLancamentos().find(l => l.id === item.idLancamento);
-            const categoria = categorias.find(c => c.id === lancamento?.categoriaId);
-            if (categoria && categoria.tipo === 'Despesa') {
-                const valorLiquido = item.valorLiquido || lancamento.valorBruto;
-                return total + valorLiquido;
+            // Item avulso
+            if (item.isAvulso && item.tipo === 'Despesa') {
+                return total + item.valor;
             }
+            
+            // Item vinculado a lançamento
+            if (!item.isAvulso) {
+                const lancamento = carregarLancamentos().find(l => l.id === item.idLancamento);
+                const categoria = categorias.find(c => c.id === lancamento?.categoriaId);
+                if (categoria && categoria.tipo === 'Despesa') {
+                    const valorLiquido = item.valorLiquido || lancamento.valorBruto;
+                    return total + valorLiquido;
+                }
+            }
+            
             return total;
         }, 0);
 }
 
 let movimentacaoEmEdicao = null;
+let itemAvulsoEmEdicao = null;
+let itemLancamentoEmEdicao = null;
 
 // Abrir modal para nova movimentação
 function abrirModalNovaMovimentacao() {
@@ -1096,24 +1116,42 @@ function renderizarLancamentosMovimentacao(movimentacaoId) {
     const itensMes = itens.filter(item => item.movimentacaoId === movimentacaoId);
     
     itensMes.forEach(item => {
-        const lancamento = lancamentos.find(l => l.id === item.idLancamento);
-        const fornecedor = fornecedores.find(f => f.id === lancamento?.fornecedorId);
-        const categoria = carregarCategorias().find(c => c.id === lancamento?.categoriaId);
-        
-        if (!lancamento) return;
-        
         const linha = document.createElement('tr');
         const badgeStatus = item.status === 'Pago' ? 'badge-receita' : 'badge-despesa';
         
+        let descricao, valorBruto, categoria, fornecedor, dataVencimento;
+        
+        if (item.isAvulso) {
+            // Item avulso
+            descricao = item.descricao;
+            valorBruto = item.valor;
+            categoria = item.tipo;
+            fornecedor = 'Avulso';
+            dataVencimento = item.dataVencimento;
+        } else {
+            // Item vinculado a lançamento
+            const lancamento = lancamentos.find(l => l.id === item.idLancamento);
+            if (!lancamento) return;
+            
+            fornecedor = fornecedores.find(f => f.id === lancamento?.fornecedorId);
+            const cat = carregarCategorias().find(c => c.id === lancamento?.categoriaId);
+            
+            descricao = fornecedor?.nome || 'N/A';
+            valorBruto = lancamento.valorBruto;
+            categoria = cat?.nome || 'N/A';
+            fornecedor = fornecedor?.nome || 'N/A';
+            dataVencimento = item.dataVencimento;
+        }
+        
         linha.innerHTML = `
-            <td>${fornecedor?.nome || 'N/A'}</td>
-            <td>R$ ${lancamento.valorBruto.toFixed(2)}</td>
-            <td>${categoria?.nome || 'N/A'}</td>
-            <td>${fornecedor?.nome || 'N/A'}</td>
-            <td>${item.dataVencimento}</td>
+            <td>${descricao}</td>
+            <td>R$ ${valorBruto.toFixed(2)}</td>
+            <td>${categoria}</td>
+            <td>${fornecedor}</td>
+            <td>${dataVencimento}</td>
             <td><span class="badge ${badgeStatus}">${item.status}</span></td>
             <td>
-                <button class="btn btn-sm btn-info" onclick="editarItemMovimentacao(${item.id})">Editar</button>
+                ${item.isAvulso ? `<button class="btn btn-sm btn-info" onclick="editarItemAvulso(${item.id})">Editar</button>` : `<button class="btn btn-sm btn-info" onclick="editarItemMovimentacao(${item.id})">Editar</button>`}
             </td>
         `;
         
@@ -1123,8 +1161,98 @@ function renderizarLancamentosMovimentacao(movimentacaoId) {
 
 // Editar item de movimentação (lançamento)
 function editarItemMovimentacao(itemId) {
-    // Implementar modal de edição do item
-    alert('Edição de item de movimentação em desenvolvimento');
+    const itens = carregarItensMovimentacao();
+    const item = itens.find(i => i.id === itemId);
+    
+    if (!item) {
+        alert('Item não encontrado!');
+        return;
+    }
+    
+    const lancamentos = carregarLancamentos();
+    const lancamento = lancamentos.find(l => l.id === item.idLancamento);
+    
+    if (!lancamento) {
+        alert('Lançamento não encontrado!');
+        return;
+    }
+    
+    const fornecedores = carregarFornecedores();
+    const fornecedor = fornecedores.find(f => f.id === lancamento.fornecedorId);
+    
+    itemLancamentoEmEdicao = itemId;
+    
+    // Preencher campos do modal
+    document.getElementById('itemLancDescricao').value = fornecedor?.nome || 'N/A';
+    document.getElementById('itemLancValorBruto').value = lancamento.valorBruto;
+    document.getElementById('itemLancDesconto').value = item.desconto || 0;
+    document.getElementById('itemLancAcrescimo').value = item.acrescimo || 0;
+    document.getElementById('itemLancValorLiquido').value = item.valorLiquido;
+    document.getElementById('itemLancStatus').value = item.status;
+    document.getElementById('itemLancVencimento').value = item.dataVencimento;
+    document.getElementById('itemLancPagamento').value = item.dataPagamento || '';
+    document.getElementById('itemLancObservacoes').value = item.observacoes || '';
+    
+    // Adicionar listeners para calcular valor líquido
+    document.getElementById('itemLancDesconto').addEventListener('input', atualizarValorLiquidoItemLancamento);
+    document.getElementById('itemLancAcrescimo').addEventListener('input', atualizarValorLiquidoItemLancamento);
+    
+    const modal = document.getElementById('modalEdicaoItemLancamento');
+    if (modal) modal.style.display = 'flex';
+}
+
+// Atualizar valor líquido ao mudar desconto ou acréscimo
+function atualizarValorLiquidoItemLancamento() {
+    const valorBruto = parseFloat(document.getElementById('itemLancValorBruto').value);
+    const desconto = parseFloat(document.getElementById('itemLancDesconto').value) || 0;
+    const acrescimo = parseFloat(document.getElementById('itemLancAcrescimo').value) || 0;
+    
+    const valorLiquido = valorBruto - desconto + acrescimo;
+    document.getElementById('itemLancValorLiquido').value = valorLiquido.toFixed(2);
+}
+
+// Fechar modal de edição de item lançamento
+function fecharModalEdicaoItemLancamento(event) {
+    if (event && event.target.id !== 'modalEdicaoItemLancamento') return;
+    
+    itemLancamentoEmEdicao = null;
+    const modal = document.getElementById('modalEdicaoItemLancamento');
+    if (modal) modal.style.display = 'none';
+}
+
+// Salvar edição de item lançamento
+function salvarEdicaoItemLancamento(event) {
+    event.preventDefault();
+    
+    if (!itemLancamentoEmEdicao || !movimentacaoEmEdicao) return;
+    
+    const desconto = parseFloat(document.getElementById('itemLancDesconto').value) || 0;
+    const acrescimo = parseFloat(document.getElementById('itemLancAcrescimo').value) || 0;
+    const valorLiquido = parseFloat(document.getElementById('itemLancValorLiquido').value);
+    const status = document.getElementById('itemLancStatus').value;
+    const vencimento = document.getElementById('itemLancVencimento').value;
+    const pagamento = document.getElementById('itemLancPagamento').value;
+    const observacoes = document.getElementById('itemLancObservacoes').value;
+    
+    const itens = carregarItensMovimentacao();
+    const item = itens.find(i => i.id === itemLancamentoEmEdicao);
+    
+    if (item) {
+        item.desconto = desconto;
+        item.acrescimo = acrescimo;
+        item.valorLiquido = valorLiquido;
+        item.status = status;
+        item.dataVencimento = vencimento;
+        item.dataPagamento = pagamento || null;
+        item.observacoes = observacoes;
+        
+        salvarItensMovimentacao(itens);
+        
+        atualizarTotaisMovimentacao(movimentacaoEmEdicao);
+        renderizarLancamentosMovimentacao(movimentacaoEmEdicao);
+        fecharModalEdicaoItemLancamento();
+        alert('Item de lançamento atualizado com sucesso!');
+    }
 }
 
 // Salvar status da movimentação
@@ -1159,4 +1287,132 @@ function deletarMovimentacao(movimentacaoId) {
     
     renderizarTabelaMovimentacoes();
 }
+
+// ==================== ITENS AVULSOS ====================
+
+// Abrir modal para adicionar item avulso
+function abrirModalNovoItemAvulso() {
+    itemAvulsoEmEdicao = null;
+    document.getElementById('modalTituloItemAvulso').textContent = 'Adicionar Item Avulso';
+    document.getElementById('itemAvulsoDescricao').value = '';
+    document.getElementById('itemAvulsoValor').value = '';
+    document.getElementById('itemAvulsoTipo').value = '';
+    document.getElementById('itemAvulsoVencimento').value = '';
+    document.getElementById('itemAvulsoStatus').value = 'Pendente';
+    document.getElementById('itemAvulsoObservacoes').value = '';
+    
+    const modal = document.getElementById('modalNovoItemAvulso');
+    if (modal) modal.style.display = 'flex';
+}
+
+// Fechar modal de novo/editar item avulso
+function fecharModalNovoItemAvulso(event) {
+    if (event && event.target.id !== 'modalNovoItemAvulso') return;
+    
+    itemAvulsoEmEdicao = null;
+    const modal = document.getElementById('modalNovoItemAvulso');
+    if (modal) modal.style.display = 'none';
+}
+
+// Salvar novo ou editar item avulso
+function salvarNovoItemAvulso(event) {
+    event.preventDefault();
+    
+    if (!movimentacaoEmEdicao) {
+        alert('Selecione uma movimentação antes!');
+        return;
+    }
+    
+    const descricao = document.getElementById('itemAvulsoDescricao').value;
+    const valor = parseFloat(document.getElementById('itemAvulsoValor').value);
+    const tipo = document.getElementById('itemAvulsoTipo').value;
+    const vencimento = document.getElementById('itemAvulsoVencimento').value;
+    const status = document.getElementById('itemAvulsoStatus').value;
+    const observacoes = document.getElementById('itemAvulsoObservacoes').value;
+    
+    if (!descricao || !valor || !tipo || !vencimento) {
+        alert('Preencha todos os campos obrigatórios!');
+        return;
+    }
+    
+    const itens = carregarItensMovimentacao();
+    
+    if (itemAvulsoEmEdicao) {
+        // Editar item existente
+        const item = itens.find(i => i.id === itemAvulsoEmEdicao);
+        if (item) {
+            item.descricao = descricao;
+            item.valor = valor;
+            item.tipo = tipo;
+            item.valorLiquido = valor;
+            item.status = status;
+            item.dataVencimento = vencimento;
+            item.observacoes = observacoes;
+        }
+    } else {
+        // Criar novo item
+        const novoItem = {
+            id: gerarIdItemMovimentacao(),
+            movimentacaoId: movimentacaoEmEdicao,
+            idLancamento: null,
+            descricao: descricao,
+            valor: valor,
+            tipo: tipo,
+            desconto: 0,
+            acrescimo: 0,
+            valorLiquido: valor,
+            status: status,
+            dataVencimento: vencimento,
+            dataPagamento: null,
+            observacoes: observacoes,
+            isAvulso: true
+        };
+        itens.push(novoItem);
+    }
+    
+    salvarItensMovimentacao(itens);
+    
+    atualizarTotaisMovimentacao(movimentacaoEmEdicao);
+    renderizarLancamentosMovimentacao(movimentacaoEmEdicao);
+    fecharModalNovoItemAvulso();
+    alert(itemAvulsoEmEdicao ? 'Item avulso atualizado com sucesso!' : 'Item avulso adicionado com sucesso!');
+}
+
+// Editar item avulso
+function editarItemAvulso(itemId) {
+    const itens = carregarItensMovimentacao();
+    const item = itens.find(i => i.id === itemId);
+    
+    if (!item) {
+        alert('Item não encontrado!');
+        return;
+    }
+    
+    itemAvulsoEmEdicao = itemId;
+    document.getElementById('modalTituloItemAvulso').textContent = 'Editar Item Avulso';
+    document.getElementById('itemAvulsoDescricao').value = item.descricao;
+    document.getElementById('itemAvulsoValor').value = item.valor;
+    document.getElementById('itemAvulsoTipo').value = item.tipo;
+    document.getElementById('itemAvulsoVencimento').value = item.dataVencimento;
+    document.getElementById('itemAvulsoStatus').value = item.status;
+    document.getElementById('itemAvulsoObservacoes').value = item.observacoes;
+    
+    const modal = document.getElementById('modalNovoItemAvulso');
+    if (modal) modal.style.display = 'flex';
+}
+
+// Deletar item avulso
+function deletarItemAvulso(itemId) {
+    if (!confirm('Tem certeza que deseja deletar este item?')) return;
+    
+    let itens = carregarItensMovimentacao();
+    itens = itens.filter(item => item.id !== itemId);
+    salvarItensMovimentacao(itens);
+    
+    if (movimentacaoEmEdicao) {
+        atualizarTotaisMovimentacao(movimentacaoEmEdicao);
+        renderizarLancamentosMovimentacao(movimentacaoEmEdicao);
+    }
+}
+
 
