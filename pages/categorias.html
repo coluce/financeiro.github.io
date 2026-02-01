@@ -2,29 +2,8 @@
     <h1>💳 Categorias</h1>
     
     <div class="form-adicionar">
-        <h2>Adicionar Nova Categoria</h2>
-        <form id="formCategoria" onsubmit="adicionarCategoria(event)">
-            <div class="form-group">
-                <label for="inputNome">Nome da Categoria:</label>
-                <input 
-                    type="text" 
-                    id="inputNome" 
-                    placeholder="Ex: Alimentação, Salário, Transporte..."
-                    required
-                >
-            </div>
-            
-            <div class="form-group">
-                <label for="selectTipo">Tipo:</label>
-                <select id="selectTipo" required>
-                    <option value="">-- Selecione um tipo --</option>
-                    <option value="Receita">Receita</option>
-                    <option value="Despesa">Despesa</option>
-                </select>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">Adicionar Categoria</button>
-        </form>
+        <h2>Categorias</h2>
+        <button class="btn btn-primary" onclick="abrirModalNovaCategoria()">Nova Categoria</button>
     </div>
 
     <div class="tabela-container">
@@ -48,11 +27,11 @@
     </div>
 </div>
 
-<!-- Modal de Edição -->
+<!-- Modal de Edição/Criação -->
 <div id="modalEdicao" class="modal-overlay" onclick="fecharModalEdicao(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <h2>Editar Categoria</h2>
+            <h2 id="modalTituloCategoria">Editar Categoria</h2>
             <button class="modal-close" onclick="fecharModalEdicao()">&times;</button>
         </div>
         
@@ -83,14 +62,3 @@
         </form>
     </div>
 </div>
-
-<script>
-    // Armazenar o ID em edição
-    let idEmEdicao = null;
-
-    // Inicializar quando a página é carregada
-    document.addEventListener('DOMContentLoaded', function() {
-        inicializarCategorias();
-        renderizarTabela();
-    });
-</script>

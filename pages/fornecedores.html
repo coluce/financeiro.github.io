@@ -2,15 +2,8 @@
     <h1>🏷️ Fornecedores</h1>
 
     <div class="form-adicionar">
-        <h2>Adicionar Novo Fornecedor</h2>
-        <form id="formFornecedor" onsubmit="adicionarFornecedor(event)">
-            <div class="form-group">
-                <label for="inputNomeFornecedor">Nome do Fornecedor:</label>
-                <input type="text" id="inputNomeFornecedor" placeholder="Ex: Papelaria ABC" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Adicionar Fornecedor</button>
-        </form>
+        <h2>Fornecedores</h2>
+        <button class="btn btn-primary" onclick="abrirModalNovoFornecedor()">Novo Fornecedor</button>
     </div>
 
     <div class="tabela-container">
@@ -33,11 +26,11 @@
     </div>
 </div>
 
-<!-- Modal de Edição de Fornecedor -->
+<!-- Modal de Edição/Criação de Fornecedor -->
 <div id="modalEdicaoFornecedor" class="modal-overlay" onclick="fecharModalEdicaoFornecedor(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <h2>Editar Fornecedor</h2>
+            <h2 id="modalTituloFornecedor">Editar Fornecedor</h2>
             <button class="modal-close" onclick="fecharModalEdicaoFornecedor()">&times;</button>
         </div>
 

@@ -172,6 +172,24 @@ function adicionarCategoria(event) {
     renderizarTabela();
 }
 
+// Abre o modal para adicionar uma nova categoria
+function abrirModalNovaCategoria() {
+    idEmEdicao = null;
+    const titulo = document.getElementById('modalTituloCategoria');
+    if (titulo) titulo.textContent = 'Adicionar Categoria';
+
+    // Limpar/resetar campos do modal
+    if (document.getElementById('editNome')) {
+        document.getElementById('editNome').value = '';
+    }
+    if (document.getElementById('editTipo')) {
+        document.getElementById('editTipo').value = '';
+    }
+
+    const modal = document.getElementById('modalEdicao');
+    if (modal) modal.style.display = 'flex';
+}
+
 // Abre o modal para editar uma categoria
 function abrirModalEdicao(id) {
     const categorias = carregarCategorias();
@@ -183,6 +201,8 @@ function abrirModalEdicao(id) {
     }
 
     idEmEdicao = id;
+    const titulo = document.getElementById('modalTituloCategoria');
+    if (titulo) titulo.textContent = 'Editar Categoria';
     document.getElementById('editNome').value = categoria.nome;
     document.getElementById('editTipo').value = categoria.tipo;
 
@@ -212,7 +232,7 @@ function fecharModalEdicao(event) {
     }
 }
 
-// Salva a edição de uma categoria
+// Salva a edição ou cria uma nova categoria
 function salvarEdicao(event) {
     event.preventDefault();
 
@@ -230,13 +250,29 @@ function salvarEdicao(event) {
         return;
     }
 
-    // Atualizar categoria
+    // Atualizar ou criar categoria
     const categorias = carregarCategorias();
     const index = categorias.findIndex(c => c.id === idEmEdicao);
 
     if (index !== -1) {
+        // Edição
         categorias[index].nome = nome;
         categorias[index].tipo = tipo;
+        salvarCategorias(categorias);
+    } else {
+        // Criação - Verificar duplicata
+        if (categorias.some(c => c.nome.toLowerCase() === nome.toLowerCase())) {
+            alert('Já existe uma categoria com este nome!');
+            return;
+        }
+
+        const novaCategoria = {
+            id: obterProximoId(),
+            nome: nome,
+            tipo: tipo
+        };
+
+        categorias.push(novaCategoria);
         salvarCategorias(categorias);
     }
 
@@ -320,42 +356,34 @@ function renderizarTabelaFornecedores() {
     });
 }
 
-// Adiciona um novo fornecedor
-function adicionarFornecedor(event) {
-    event.preventDefault();
+// Abre o modal para adicionar um novo fornecedor
+function abrirModalNovoFornecedor() {
+    idEmEdicaoFornecedor = null;
+    const titulo = document.getElementById('modalTituloFornecedor');
+    if (titulo) titulo.textContent = 'Adicionar Fornecedor';
 
-    const nome = document.getElementById('inputNomeFornecedor').value.trim();
-
-    // Validações
-    if (!nome) {
-        alert('O nome do fornecedor não pode estar vazio!');
-        return;
+    // Limpar/resetar campos do modal
+    if (document.getElementById('editNomeFornecedor')) {
+        document.getElementById('editNomeFornecedor').value = '';
     }
 
-    // Carrega os fornecedores antes de validar duplicata
-    const fornecedores = carregarFornecedores();
+    const modal = document.getElementById('modalEdicaoFornecedor');
+    if (modal) modal.style.display = 'flex';
+}
 
-    // Validar se já existe fornecedor com o mesmo nome
-    if (fornecedores.some(f => f.nome.toLowerCase() === nome.toLowerCase())) {
-        alert('Já existe um fornecedor com este nome!');
-        return;
+// Abre o modal para adicionar um novo fornecedor
+function abrirModalNovoFornecedor() {
+    idEmEdicaoFornecedor = null;
+    const titulo = document.getElementById('modalTituloFornecedor');
+    if (titulo) titulo.textContent = 'Adicionar Fornecedor';
+
+    // Limpar/resetar campos do modal
+    if (document.getElementById('editNomeFornecedor')) {
+        document.getElementById('editNomeFornecedor').value = '';
     }
 
-    // Criar novo fornecedor
-    const novoFornecedor = {
-        id: obterProximoIdFornecedor(),
-        nome: nome
-    };
-
-    // Adicionar à lista
-    fornecedores.push(novoFornecedor);
-    salvarFornecedores(fornecedores);
-
-    // Limpar formulário
-    document.getElementById('formFornecedor').reset();
-
-    // Atualizar tabela
-    renderizarTabelaFornecedores();
+    const modal = document.getElementById('modalEdicaoFornecedor');
+    if (modal) modal.style.display = 'flex';
 }
 
 // Abre o modal para editar um fornecedor
@@ -369,6 +397,8 @@ function abrirModalEdicaoFornecedor(id) {
     }
 
     idEmEdicaoFornecedor = id;
+    const titulo = document.getElementById('modalTituloFornecedor');
+    if (titulo) titulo.textContent = 'Editar Fornecedor';
     document.getElementById('editNomeFornecedor').value = fornecedor.nome;
 
     const modal = document.getElementById('modalEdicaoFornecedor');
@@ -397,7 +427,7 @@ function fecharModalEdicaoFornecedor(event) {
     }
 }
 
-// Salva a edição de um fornecedor
+// Salva a edição ou cria um novo fornecedor
 function salvarEdicaoFornecedor(event) {
     event.preventDefault();
 
@@ -409,18 +439,32 @@ function salvarEdicaoFornecedor(event) {
         return;
     }
 
-    // Atualizar fornecedor
+    // Atualizar ou criar fornecedor
     const fornecedores = carregarFornecedores();
     const index = fornecedores.findIndex(f => f.id === idEmEdicaoFornecedor);
 
     if (index !== -1) {
-        // Verificar duplicata (exceto o próprio registro)
+        // Edição - Verificar duplicata (exceto o próprio registro)
         if (fornecedores.some((f, idx) => idx !== index && f.nome.toLowerCase() === nome.toLowerCase())) {
             alert('Já existe outro fornecedor com este nome!');
             return;
         }
 
         fornecedores[index].nome = nome;
+        salvarFornecedores(fornecedores);
+    } else {
+        // Criação - Verificar duplicata
+        if (fornecedores.some(f => f.nome.toLowerCase() === nome.toLowerCase())) {
+            alert('Já existe um fornecedor com este nome!');
+            return;
+        }
+
+        const novoFornecedor = {
+            id: obterProximoIdFornecedor(),
+            nome: nome
+        };
+
+        fornecedores.push(novoFornecedor);
         salvarFornecedores(fornecedores);
     }
 
