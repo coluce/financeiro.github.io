@@ -38,6 +38,10 @@ async function carregarPagina(pagina) {
             renderizarTabelaLancamentos();
         }
 
+        if (pagina === 'movimentacoes') {
+            renderizarTabelaMovimentacoes();
+        }
+
     } catch (erro) {
         conteudo.innerHTML = "<h1>Erro</h1><p>Deu zica lendo o trêm.</p>";
         console.error("Num foi:", erro);
@@ -836,3 +840,323 @@ function atualizarVisibilidadeRecorrenciaModal() {
         if (label) label.textContent = 'Número de vezes (deixe vazio para repetir indefinidamente):';
     }
 }
+
+// ==================== MOVIMENTAÇÕES ====================
+
+// Carregar movimentações do localStorage
+function carregarMovimentacoes() {
+    const data = localStorage.getItem('movimentacoes');
+    return data ? JSON.parse(data) : [];
+}
+
+// Salvar movimentações no localStorage
+function salvarMovimentacoes(movimentacoes) {
+    localStorage.setItem('movimentacoes', JSON.stringify(movimentacoes));
+}
+
+// Carregar itens de movimentação do localStorage
+function carregarItensMovimentacao() {
+    const data = localStorage.getItem('itensMovimentacao');
+    return data ? JSON.parse(data) : [];
+}
+
+// Salvar itens de movimentação no localStorage
+function salvarItensMovimentacao(itens) {
+    localStorage.setItem('itensMovimentacao', JSON.stringify(itens));
+}
+
+// Gerar ID único para movimentação
+function gerarIdMovimentacao() {
+    const movimentacoes = carregarMovimentacoes();
+    return movimentacoes.length > 0 ? Math.max(...movimentacoes.map(m => m.id)) + 1 : 1;
+}
+
+// Gerar ID único para item de movimentação
+function gerarIdItemMovimentacao() {
+    const itens = carregarItensMovimentacao();
+    return itens.length > 0 ? Math.max(...itens.map(i => i.id)) + 1 : 1;
+}
+
+// Renderizar tabela de movimentações
+function renderizarTabelaMovimentacoes() {
+    const movimentacoes = carregarMovimentacoes();
+    const tbody = document.getElementById('corpoTabelaMovimentacoes');
+    
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+
+    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    movimentacoes.forEach(mov => {
+        const linha = document.createElement('tr');
+        
+        const receitas = calcularTotalReceitas(mov.id);
+        const despesas = calcularTotalDespesas(mov.id);
+        const saldo = receitas - despesas;
+        
+        const badgeStatus = mov.status === 'Aberto' ? 'badge-receita' : 'badge-despesa';
+        
+        linha.innerHTML = `
+            <td>${meses[mov.mes - 1]} / ${mov.ano}</td>
+            <td><span class="badge ${badgeStatus}">${mov.status}</span></td>
+            <td style="color: #4CAF50; font-weight: bold;">R$ ${receitas.toFixed(2)}</td>
+            <td style="color: #f44336; font-weight: bold;">R$ ${despesas.toFixed(2)}</td>
+            <td style="font-weight: bold; color: #2196F3;">R$ ${saldo.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="abrirModalEdicaoMovimentacao(${mov.id})">Editar</button>
+                <button class="btn btn-sm btn-danger" onclick="deletarMovimentacao(${mov.id})">Deletar</button>
+            </td>
+        `;
+        
+        tbody.appendChild(linha);
+    });
+}
+
+// Calcular total de receitas para uma movimentação
+function calcularTotalReceitas(movimentacaoId) {
+    const itens = carregarItensMovimentacao();
+    const categorias = carregarCategorias();
+    
+    return itens
+        .filter(item => item.movimentacaoId === movimentacaoId)
+        .reduce((total, item) => {
+            const lancamento = carregarLancamentos().find(l => l.id === item.idLancamento);
+            const categoria = categorias.find(c => c.id === lancamento?.categoriaId);
+            if (categoria && categoria.tipo === 'Receita') {
+                const valorLiquido = item.valorLiquido || lancamento.valorBruto;
+                return total + valorLiquido;
+            }
+            return total;
+        }, 0);
+}
+
+// Calcular total de despesas para uma movimentação
+function calcularTotalDespesas(movimentacaoId) {
+    const itens = carregarItensMovimentacao();
+    const categorias = carregarCategorias();
+    
+    return itens
+        .filter(item => item.movimentacaoId === movimentacaoId)
+        .reduce((total, item) => {
+            const lancamento = carregarLancamentos().find(l => l.id === item.idLancamento);
+            const categoria = categorias.find(c => c.id === lancamento?.categoriaId);
+            if (categoria && categoria.tipo === 'Despesa') {
+                const valorLiquido = item.valorLiquido || lancamento.valorBruto;
+                return total + valorLiquido;
+            }
+            return total;
+        }, 0);
+}
+
+let movimentacaoEmEdicao = null;
+
+// Abrir modal para nova movimentação
+function abrirModalNovaMovimentacao() {
+    const hoje = new Date();
+    document.getElementById('novaMovMes').value = '';
+    document.getElementById('novaMovAno').value = '';
+    
+    const modal = document.getElementById('modalNovaMovimentacao');
+    if (modal) modal.style.display = 'flex';
+}
+
+// Fechar modal de nova movimentação
+function fecharModalNovaMovimentacao(event) {
+    if (event && event.target.id !== 'modalNovaMovimentacao') return;
+    
+    const modal = document.getElementById('modalNovaMovimentacao');
+    if (modal) modal.style.display = 'none';
+}
+
+// Salvar nova movimentação
+function salvarNovaMovimentacao(event) {
+    event.preventDefault();
+    
+    const mes = parseInt(document.getElementById('novaMovMes').value);
+    const ano = parseInt(document.getElementById('novaMovAno').value);
+    
+    if (!mes || !ano) {
+        alert('Informe mês e ano!');
+        return;
+    }
+    
+    // Verificar se já existe movimentação para este mês
+    const movimentacoes = carregarMovimentacoes();
+    if (movimentacoes.some(m => m.mes === mes && m.ano === ano)) {
+        alert('Já existe uma movimentação para este mês!');
+        return;
+    }
+    
+    const novaMovimentacao = {
+        id: gerarIdMovimentacao(),
+        mes: mes,
+        ano: ano,
+        status: 'Aberto'
+    };
+    
+    movimentacoes.push(novaMovimentacao);
+    salvarMovimentacoes(movimentacoes);
+    
+    // Vinculação automática de lançamentos do mês
+    vincularLancamentosAoMes(novaMovimentacao.id, mes, ano);
+    
+    renderizarTabelaMovimentacoes();
+    fecharModalNovaMovimentacao();
+    alert('Movimentação criada com sucesso!');
+}
+
+// Vincular lançamentos ao mês automaticamente
+function vincularLancamentosAoMes(movimentacaoId, mes, ano) {
+    const lancamentos = carregarLancamentos();
+    const itens = carregarItensMovimentacao();
+    
+    lancamentos.forEach(lancamento => {
+        const dataLancamento = new Date(lancamento.dataLancamento);
+        if (dataLancamento.getMonth() + 1 === mes && dataLancamento.getFullYear() === ano) {
+            const novoItem = {
+                id: gerarIdItemMovimentacao(),
+                movimentacaoId: movimentacaoId,
+                idLancamento: lancamento.id,
+                desconto: 0,
+                acrescimo: 0,
+                valorLiquido: lancamento.valorBruto,
+                status: 'Pendente',
+                dataVencimento: lancamento.dataLancamento,
+                dataPagamento: null,
+                observacoes: ''
+            };
+            itens.push(novoItem);
+        }
+    });
+    
+    salvarItensMovimentacao(itens);
+}
+
+// Abrir modal para editar movimentação
+function abrirModalEdicaoMovimentacao(movimentacaoId) {
+    const movimentacoes = carregarMovimentacoes();
+    const movimentacao = movimentacoes.find(m => m.id === movimentacaoId);
+    
+    if (!movimentacao) {
+        alert('Movimentação não encontrada!');
+        return;
+    }
+    
+    movimentacaoEmEdicao = movimentacaoId;
+    
+    const meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    const titulo = document.getElementById('modalTituloEdicaoMovimentacao');
+    if (titulo) titulo.textContent = `${meses[movimentacao.mes]} / ${movimentacao.ano}`;
+    
+    document.getElementById('editStatusMovimentacao').value = movimentacao.status;
+    
+    atualizarTotaisMovimentacao(movimentacaoId);
+    renderizarLancamentosMovimentacao(movimentacaoId);
+    
+    const modal = document.getElementById('modalEdicaoMovimentacao');
+    if (modal) modal.style.display = 'flex';
+}
+
+// Fechar modal de edição de movimentação
+function fecharModalEdicaoMovimentacao(event) {
+    if (event && event.target.id !== 'modalEdicaoMovimentacao') return;
+    
+    const modal = document.getElementById('modalEdicaoMovimentacao');
+    if (modal) modal.style.display = 'none';
+    movimentacaoEmEdicao = null;
+}
+
+// Atualizar totais na movimentação
+function atualizarTotaisMovimentacao(movimentacaoId) {
+    const receitas = calcularTotalReceitas(movimentacaoId);
+    const despesas = calcularTotalDespesas(movimentacaoId);
+    const saldo = receitas - despesas;
+    
+    document.getElementById('totalReceitas').textContent = `R$ ${receitas.toFixed(2)}`;
+    document.getElementById('totalDespesas').textContent = `R$ ${despesas.toFixed(2)}`;
+    document.getElementById('saldoFinal').textContent = `R$ ${saldo.toFixed(2)}`;
+    document.getElementById('saldoFinal').style.color = saldo >= 0 ? '#4CAF50' : '#f44336';
+}
+
+// Renderizar lançamentos da movimentação
+function renderizarLancamentosMovimentacao(movimentacaoId) {
+    const itens = carregarItensMovimentacao();
+    const lancamentos = carregarLancamentos();
+    const fornecedores = carregarFornecedores();
+    const tbody = document.getElementById('corpoTabelaLancamentosMovimentacao');
+    
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    const itensMes = itens.filter(item => item.movimentacaoId === movimentacaoId);
+    
+    itensMes.forEach(item => {
+        const lancamento = lancamentos.find(l => l.id === item.idLancamento);
+        const fornecedor = fornecedores.find(f => f.id === lancamento?.fornecedorId);
+        const categoria = carregarCategorias().find(c => c.id === lancamento?.categoriaId);
+        
+        if (!lancamento) return;
+        
+        const linha = document.createElement('tr');
+        const badgeStatus = item.status === 'Pago' ? 'badge-receita' : 'badge-despesa';
+        
+        linha.innerHTML = `
+            <td>${fornecedor?.nome || 'N/A'}</td>
+            <td>R$ ${lancamento.valorBruto.toFixed(2)}</td>
+            <td>${categoria?.nome || 'N/A'}</td>
+            <td>${fornecedor?.nome || 'N/A'}</td>
+            <td>${item.dataVencimento}</td>
+            <td><span class="badge ${badgeStatus}">${item.status}</span></td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="editarItemMovimentacao(${item.id})">Editar</button>
+            </td>
+        `;
+        
+        tbody.appendChild(linha);
+    });
+}
+
+// Editar item de movimentação (lançamento)
+function editarItemMovimentacao(itemId) {
+    // Implementar modal de edição do item
+    alert('Edição de item de movimentação em desenvolvimento');
+}
+
+// Salvar status da movimentação
+function salvarStatusMovimentacao() {
+    if (!movimentacaoEmEdicao) return;
+    
+    const novoStatus = document.getElementById('editStatusMovimentacao').value;
+    const movimentacoes = carregarMovimentacoes();
+    const movimentacao = movimentacoes.find(m => m.id === movimentacaoEmEdicao);
+    
+    if (movimentacao) {
+        movimentacao.status = novoStatus;
+        salvarMovimentacoes(movimentacoes);
+        renderizarTabelaMovimentacoes();
+        fecharModalEdicaoMovimentacao();
+        alert('Status da movimentação atualizado com sucesso!');
+    }
+}
+
+// Deletar movimentação
+function deletarMovimentacao(movimentacaoId) {
+    if (!confirm('Tem certeza que deseja deletar esta movimentação?')) return;
+    
+    let movimentacoes = carregarMovimentacoes();
+    movimentacoes = movimentacoes.filter(m => m.id !== movimentacaoId);
+    salvarMovimentacoes(movimentacoes);
+    
+    // Deletar itens da movimentação
+    let itens = carregarItensMovimentacao();
+    itens = itens.filter(item => item.movimentacaoId !== movimentacaoId);
+    salvarItensMovimentacao(itens);
+    
+    renderizarTabelaMovimentacoes();
+}
+

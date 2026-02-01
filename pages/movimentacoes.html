@@ -1,0 +1,120 @@
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Movimentações</h1>
+        <button class="btn btn-primary" onclick="abrirModalNovaMovimentacao()">+ Novo</button>
+    </div>
+
+    <table id="tabelaMovimentacoes" class="table">
+        <thead>
+            <tr>
+                <th>Mês/Ano</th>
+                <th>Status</th>
+                <th>Receitas</th>
+                <th>Despesas</th>
+                <th>Saldo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="corpoTabelaMovimentacoes">
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para criar nova movimentação -->
+<div id="modalNovaMovimentacao" class="modal" onclick="fecharModalNovaMovimentacao(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Nova Movimentação</h2>
+            <button class="modal-close" onclick="fecharModalNovaMovimentacao()">&times;</button>
+        </div>
+
+        <form id="formNovaMovimentacao" onsubmit="salvarNovaMovimentacao(event)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label for="novaMovMes">Mês:</label>
+                    <select id="novaMovMes" required>
+                        <option value="">-- Selecione um mês --</option>
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="novaMovAno">Ano:</label>
+                    <input type="number" id="novaMovAno" min="2020" max="2100" required>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="fecharModalNovaMovimentacao()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Criar Movimentação</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para editar movimentação (com lançamentos do mês) -->
+<div id="modalEdicaoMovimentacao" class="modal" onclick="fecharModalEdicaoMovimentacao(event)">
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h2 id="modalTituloEdicaoMovimentacao">Editar Movimentação</h2>
+            <button class="modal-close" onclick="fecharModalEdicaoMovimentacao()">&times;</button>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
+                <div>
+                    <strong>Receitas:</strong>
+                    <p id="totalReceitas" style="font-size: 18px; color: #4CAF50;">R$ 0,00</p>
+                </div>
+                <div>
+                    <strong>Despesas:</strong>
+                    <p id="totalDespesas" style="font-size: 18px; color: #f44336;">R$ 0,00</p>
+                </div>
+                <div>
+                    <strong>Saldo:</strong>
+                    <p id="saldoFinal" style="font-size: 18px; font-weight: bold; color: #2196F3;">R$ 0,00</p>
+                </div>
+                <div>
+                    <strong>Status:</strong>
+                    <select id="editStatusMovimentacao" style="font-size: 16px; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="Aberto">Aberto</option>
+                        <option value="Fechado">Fechado</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <h3>Lançamentos do Mês</h3>
+        <table id="tabelaLancamentosMovimentacao" class="table">
+            <thead>
+                <tr>
+                    <th>Descrição</th>
+                    <th>Valor Bruto</th>
+                    <th>Categoria</th>
+                    <th>Fornecedor</th>
+                    <th>Vencimento</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="corpoTabelaLancamentosMovimentacao">
+            </tbody>
+        </table>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="fecharModalEdicaoMovimentacao()">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="salvarStatusMovimentacao()">Salvar</button>
+        </div>
+    </div>
+</div>

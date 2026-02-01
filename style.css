@@ -319,6 +319,20 @@ section {
 
 /* ==================== MODAL ==================== */
 
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
 .modal-overlay {
     display: none;
     position: fixed;
@@ -484,4 +498,110 @@ section {
 
 .toggle-switch:checked::before {
     left: 28px;
+}
+
+/* Estilos para modals maiores */
+.modal-lg {
+    max-width: 900px;
+    width: 90%;
+}
+
+/* Botões pequenos para tabelas */
+.btn-sm {
+    padding: 6px 10px;
+    font-size: 12px;
+    margin: 2px;
+}
+
+.btn-info {
+    background-color: #2196F3;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #1976D2;
+}
+
+.btn-danger {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #da190b;
+}
+
+/* Contêiner de movimentação */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Tabela responsiva */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table thead {
+    background-color: #f5f5f5;
+    border-bottom: 2px solid #ddd;
+}
+
+.table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Badge de status */
+.badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge-receita {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.badge-despesa {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .modal-lg {
+        max-width: 95%;
+        width: 95%;
+    }
+
+    .table {
+        font-size: 12px;
+    }
+
+    .table th,
+    .table td {
+        padding: 8px;
+    }
+
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
 }
