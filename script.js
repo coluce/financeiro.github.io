@@ -675,7 +675,7 @@ function abrirModalNovoLancamento() {
     }
     if (document.getElementById('editCategoria')) document.getElementById('editCategoria').value = '';
     if (document.getElementById('editFornecedor')) document.getElementById('editFornecedor').value = '';
-    if (document.getElementById('editRecorrencia')) document.getElementById('editRecorrencia').value = 'avulso';
+    if (document.getElementById('editRecorrencia')) document.getElementById('editRecorrencia').value = 'parcelado';
     if (document.getElementById('editRecorrencias')) document.getElementById('editRecorrencias').value = '';
 
     preencherSelectsCategoriaFornecedor();
