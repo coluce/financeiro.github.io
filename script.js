@@ -1,3 +1,8 @@
+// Garantir que carregarPagina está disponível globalmente
+if (typeof carregarPagina === 'undefined') {
+    window.carregarPagina = carregarPagina;
+}
+
 async function carregarPagina(pagina) {
     const conteudo = document.getElementById("conteudo");
 
@@ -969,6 +974,7 @@ function calcularTotalDespesas(movimentacaoId) {
 }
 
 let movimentacaoEmEdicao = null;
+let statusMovimentacaoEmEdicao = null;
 let itemAvulsoEmEdicao = null;
 let itemLancamentoEmEdicao = null;
 
@@ -1065,6 +1071,7 @@ function abrirModalEdicaoMovimentacao(movimentacaoId) {
     }
     
     movimentacaoEmEdicao = movimentacaoId;
+    statusMovimentacaoEmEdicao = movimentacao.status;
     
     const meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1076,6 +1083,7 @@ function abrirModalEdicaoMovimentacao(movimentacaoId) {
     
     atualizarTotaisMovimentacao(movimentacaoId);
     renderizarLancamentosMovimentacao(movimentacaoId);
+    atualizarVisibilidadeBotoesMovimentacao();
     
     const modal = document.getElementById('modalEdicaoMovimentacao');
     if (modal) modal.style.display = 'flex';
@@ -1088,6 +1096,23 @@ function fecharModalEdicaoMovimentacao(event) {
     const modal = document.getElementById('modalEdicaoMovimentacao');
     if (modal) modal.style.display = 'none';
     movimentacaoEmEdicao = null;
+    statusMovimentacaoEmEdicao = null;
+}
+
+// Atualizar visibilidade dos botões conforme status da movimentação
+function atualizarVisibilidadeBotoesMovimentacao() {
+    const btnAdicionarItem = document.querySelector('button[onclick="abrirModalNovoItemAvulso()"]');
+    const estaAberto = statusMovimentacaoEmEdicao === 'Aberto';
+    
+    if (btnAdicionarItem) {
+        btnAdicionarItem.style.display = estaAberto ? 'inline-block' : 'none';
+    }
+    
+    // Atualizar botões de edição na tabela
+    const botoesEditar = document.querySelectorAll('button[onclick*="editarItemAvulso"], button[onclick*="editarItemMovimentacao"]');
+    botoesEditar.forEach(btn => {
+        btn.style.display = estaAberto ? 'inline-block' : 'none';
+    });
 }
 
 // Atualizar totais na movimentação
@@ -1265,9 +1290,9 @@ function salvarStatusMovimentacao() {
     
     if (movimentacao) {
         movimentacao.status = novoStatus;
+        statusMovimentacaoEmEdicao = novoStatus;
         salvarMovimentacoes(movimentacoes);
-        renderizarTabelaMovimentacoes();
-        fecharModalEdicaoMovimentacao();
+        atualizarVisibilidadeBotoesMovimentacao();
         alert('Status da movimentação atualizado com sucesso!');
     }
 }
@@ -1300,6 +1325,7 @@ function abrirModalNovoItemAvulso() {
     document.getElementById('itemAvulsoVencimento').value = '';
     document.getElementById('itemAvulsoStatus').value = 'Pendente';
     document.getElementById('itemAvulsoObservacoes').value = '';
+    document.getElementById('btnDeletarItemAvulso').style.display = 'none';
     
     const modal = document.getElementById('modalNovoItemAvulso');
     if (modal) modal.style.display = 'flex';
@@ -1396,9 +1422,29 @@ function editarItemAvulso(itemId) {
     document.getElementById('itemAvulsoVencimento').value = item.dataVencimento;
     document.getElementById('itemAvulsoStatus').value = item.status;
     document.getElementById('itemAvulsoObservacoes').value = item.observacoes;
+    document.getElementById('btnDeletarItemAvulso').style.display = 'inline-block';
     
     const modal = document.getElementById('modalNovoItemAvulso');
     if (modal) modal.style.display = 'flex';
+}
+
+// Deletar item avulso do modal
+function deletarItemAvulsoDoModal() {
+    if (!itemAvulsoEmEdicao) return;
+    
+    if (!confirm('Tem certeza que deseja deletar este item?')) return;
+    
+    let itens = carregarItensMovimentacao();
+    itens = itens.filter(item => item.id !== itemAvulsoEmEdicao);
+    salvarItensMovimentacao(itens);
+    
+    if (movimentacaoEmEdicao) {
+        atualizarTotaisMovimentacao(movimentacaoEmEdicao);
+        renderizarLancamentosMovimentacao(movimentacaoEmEdicao);
+    }
+    
+    fecharModalNovoItemAvulso();
+    alert('Item avulso deletado com sucesso!');
 }
 
 // Deletar item avulso
