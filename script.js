@@ -47,6 +47,10 @@ async function carregarPagina(pagina) {
             renderizarTabelaMovimentacoes();
         }
 
+        if (pagina === 'home') {
+            inicializarDashboard();
+        }
+
     } catch (erro) {
         conteudo.innerHTML = "<h1>Erro</h1><p>Deu zica lendo o trêm.</p>";
         console.error("Num foi:", erro);
@@ -684,7 +688,7 @@ function abrirModalNovoLancamento() {
     }
     if (document.getElementById('editCategoria')) document.getElementById('editCategoria').value = '';
     if (document.getElementById('editFornecedor')) document.getElementById('editFornecedor').value = '';
-    if (document.getElementById('editRecorrencia')) document.getElementById('editRecorrencia').value = 'parcelado';
+    if (document.getElementById('editRecorrencia')) document.getElementById('editRecorrencia').value = 'avulso';
     if (document.getElementById('editRecorrencias')) document.getElementById('editRecorrencias').value = '';
 
     preencherSelectsCategoriaFornecedor();
@@ -711,7 +715,20 @@ function salvarEdicaoLancamento(event) {
         return;
     }
 
-    // sem data de pagamento no fluxo atual
+    if (!dataLancamento) {
+        alert('Selecione a data de lançamento!');
+        return;
+    }
+
+    if (!categoriaId) {
+        alert('Selecione uma categoria!');
+        return;
+    }
+
+    if (!fornecedorId) {
+        alert('Selecione um fornecedor!');
+        return;
+    }
 
     // Atualizar lançamento
     const lancamentos = carregarLancamentos();
@@ -1459,6 +1476,235 @@ function deletarItemAvulso(itemId) {
         atualizarTotaisMovimentacao(movimentacaoEmEdicao);
         renderizarLancamentosMovimentacao(movimentacaoEmEdicao);
     }
+}
+
+// ==================== DASHBOARD ====================
+
+// Inicializar e renderizar dashboard
+function inicializarDashboard() {
+    renderizarDashboard();
+}
+
+// Renderizar todo o dashboard
+function renderizarDashboard() {
+    const resumoGeral = calcularResumoGeral();
+    const resumoMes = calcularResumoMes();
+    
+    // Atualizar resumo geral
+    const receitasGerais = document.getElementById('receitasGerais');
+    const despesasGerais = document.getElementById('despesasGerais');
+    const saldoGeral = document.getElementById('saldoGeral');
+    
+    if (receitasGerais) receitasGerais.textContent = `R$ ${resumoGeral.receitas.toFixed(2)}`;
+    if (despesasGerais) despesasGerais.textContent = `R$ ${resumoGeral.despesas.toFixed(2)}`;
+    
+    if (saldoGeral) {
+        saldoGeral.textContent = `R$ ${resumoGeral.saldo.toFixed(2)}`;
+        saldoGeral.style.color = resumoGeral.saldo >= 0 ? '#4CAF50' : '#f44336';
+    }
+    
+    // Atualizar resumo mensal
+    const mesCheio = document.getElementById('mesCheio');
+    const receitasMes = document.getElementById('receitasMes');
+    const despesasMes = document.getElementById('despesasMes');
+    const saldoMes = document.getElementById('saldoMes');
+    const pendenteMes = document.getElementById('pendenteMes');
+    
+    if (mesCheio) mesCheio.textContent = resumoMes.mesCheio;
+    if (receitasMes) receitasMes.textContent = `R$ ${resumoMes.receitas.toFixed(2)}`;
+    if (despesasMes) despesasMes.textContent = `R$ ${resumoMes.despesas.toFixed(2)}`;
+    
+    if (saldoMes) {
+        saldoMes.textContent = `R$ ${resumoMes.saldo.toFixed(2)}`;
+        saldoMes.style.color = resumoMes.saldo >= 0 ? '#4CAF50' : '#f44336';
+    }
+    
+    if (pendenteMes) {
+        pendenteMes.textContent = `R$ ${resumoMes.pendentes.toFixed(2)}`;
+        pendenteMes.style.color = resumoMes.pendentes > 0 ? '#FF9800' : '#4CAF50';
+    }
+    
+    // Renderizar tabela de pendentes
+    renderizarPendentes();
+}
+
+// Calcular resumo geral (todas as movimentações)
+function calcularResumoGeral() {
+    const itens = carregarItensMovimentacao();
+    const categorias = carregarCategorias();
+    let receitas = 0;
+    let despesas = 0;
+    
+    itens.forEach(item => {
+        const valor = item.valorLiquido || item.valor;
+        
+        if (item.isAvulso) {
+            // Item avulso
+            if (item.tipo === 'Receita') {
+                receitas += valor;
+            } else if (item.tipo === 'Despesa') {
+                despesas += valor;
+            }
+        } else {
+            // Item vinculado a lançamento
+            const lancamento = carregarLancamentos().find(l => l.id === item.idLancamento);
+            const categoria = categorias.find(c => c.id === lancamento?.categoriaId);
+            
+            if (categoria) {
+                if (categoria.tipo === 'Receita') {
+                    receitas += valor;
+                } else if (categoria.tipo === 'Despesa') {
+                    despesas += valor;
+                }
+            }
+        }
+    });
+    
+    return {
+        receitas: receitas,
+        despesas: despesas,
+        saldo: receitas - despesas
+    };
+}
+
+// Calcular resumo do mês atual
+function calcularResumoMes() {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = hoje.getFullYear();
+    
+    const meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const mesCheio = `${meses[mesAtual]} / ${anoAtual}`;
+    
+    const movimentacoes = carregarMovimentacoes();
+    const movimentacao = movimentacoes.find(m => m.mes === mesAtual && m.ano === anoAtual);
+    
+    let receitas = 0;
+    let despesas = 0;
+    let pendentes = 0;
+    
+    if (movimentacao) {
+        const itens = carregarItensMovimentacao();
+        const categorias = carregarCategorias();
+        const itensMes = itens.filter(i => i.movimentacaoId === movimentacao.id);
+        
+        itensMes.forEach(item => {
+            const valor = item.valorLiquido || item.valor;
+            
+            if (item.isAvulso) {
+                if (item.tipo === 'Receita') {
+                    receitas += valor;
+                    if (item.status === 'Pendente') pendentes += valor;
+                } else if (item.tipo === 'Despesa') {
+                    despesas += valor;
+                    if (item.status === 'Pendente') pendentes += valor;
+                }
+            } else {
+                const lancamento = carregarLancamentos().find(l => l.id === item.idLancamento);
+                const categoria = categorias.find(c => c.id === lancamento?.categoriaId);
+                
+                if (categoria) {
+                    if (categoria.tipo === 'Receita') {
+                        receitas += valor;
+                        if (item.status === 'Pendente') pendentes += valor;
+                    } else if (categoria.tipo === 'Despesa') {
+                        despesas += valor;
+                        if (item.status === 'Pendente') pendentes += valor;
+                    }
+                }
+            }
+        });
+    }
+    
+    return {
+        mesCheio: mesCheio,
+        receitas: receitas,
+        despesas: despesas,
+        saldo: receitas - despesas,
+        pendentes: pendentes
+    };
+}
+
+// Renderizar tabela de lançamentos pendentes (todos, não apenas do mês atual)
+function renderizarPendentes() {
+    const movimentacoes = carregarMovimentacoes();
+    const itens = carregarItensMovimentacao();
+    
+    const tbody = document.getElementById('corpoPendentes');
+    const mensagem = document.getElementById('mensagemVaziaPendentes');
+    
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    // Filtrar TODOS os itens pendentes de TODAS as movimentações
+    const itensPendentes = itens.filter(i => i.status === 'Pendente');
+    
+    if (itensPendentes.length === 0) {
+        if (mensagem) mensagem.style.display = 'block';
+        return;
+    }
+    
+    if (mensagem) mensagem.style.display = 'none';
+    
+    const lancamentos = carregarLancamentos();
+    const fornecedores = carregarFornecedores();
+    const categorias = carregarCategorias();
+    
+    const meses = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
+                   'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    
+    // Ordenar por data de vencimento
+    itensPendentes.sort((a, b) => new Date(a.dataVencimento) - new Date(b.dataVencimento));
+    
+    itensPendentes.forEach(item => {
+        const linha = document.createElement('tr');
+        
+        // Encontrar a movimentação para pegar mês/ano
+        const movimentacao = movimentacoes.find(m => m.id === item.movimentacaoId);
+        const mesCheio = movimentacao ? `${meses[movimentacao.mes]} / ${movimentacao.ano}` : 'N/A';
+        
+        let descricao, valorBruto, categoria, fornecedor, desconto, acrescimo, valorLiquido;
+        
+        if (item.isAvulso) {
+            descricao = item.descricao;
+            valorBruto = item.valor;
+            categoria = item.tipo;
+            fornecedor = 'Avulso';
+            desconto = 0;
+            acrescimo = 0;
+            valorLiquido = item.valor;
+        } else {
+            const lancamento = lancamentos.find(l => l.id === item.idLancamento);
+            if (!lancamento) return;
+            
+            const forn = fornecedores.find(f => f.id === lancamento.fornecedorId);
+            const cat = categorias.find(c => c.id === lancamento.categoriaId);
+            
+            descricao = forn?.nome || 'N/A';
+            valorBruto = lancamento.valorBruto;
+            categoria = cat?.nome || 'N/A';
+            fornecedor = forn?.nome || 'N/A';
+            desconto = item.desconto || 0;
+            acrescimo = item.acrescimo || 0;
+            valorLiquido = item.valorLiquido || lancamento.valorBruto;
+        }
+        
+        linha.innerHTML = `
+            <td><strong>${mesCheio}</strong></td>
+            <td>${descricao}</td>
+            <td>R$ ${valorBruto.toFixed(2)}</td>
+            <td>R$ ${desconto.toFixed(2)}</td>
+            <td>R$ ${acrescimo.toFixed(2)}</td>
+            <td><strong>R$ ${valorLiquido.toFixed(2)}</strong></td>
+            <td>${item.dataVencimento}</td>
+            <td>${categoria}</td>
+            <td>${fornecedor}</td>
+        `;
+        
+        tbody.appendChild(linha);
+    });
 }
 
 

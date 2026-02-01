@@ -1,4 +1,88 @@
-<h1>Bem-vindo</h1>
-<p>Este é um site SPA criado para aprendizado e prática.</p>
-<p>Use o menu para navegar entre as seções.</p>
+<div class="dashboard-container">
+    <h1>📊 Dashboard Financeiro</h1>
+
+    <!-- Resumo Geral -->
+    <div class="resumo-geral">
+        <div class="card card-receita">
+            <div class="card-icon">💰</div>
+            <div class="card-content">
+                <h3>Receitas Totais</h3>
+                <p id="receitasGerais" class="valor-grande">R$ 0.00</p>
+            </div>
+        </div>
+
+        <div class="card card-despesa">
+            <div class="card-icon">💸</div>
+            <div class="card-content">
+                <h3>Despesas Totais</h3>
+                <p id="despesasGerais" class="valor-grande">R$ 0.00</p>
+            </div>
+        </div>
+
+        <div class="card card-saldo">
+            <div class="card-icon">📈</div>
+            <div class="card-content">
+                <h3>Saldo Geral</h3>
+                <p id="saldoGeral" class="valor-grande">R$ 0.00</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo do Mês Atual -->
+    <div class="resumo-mes">
+        <h2>📅 <span id="mesCheio"></span></h2>
+
+        <div class="cards-mes">
+            <div class="card-pequeno card-receita">
+                <h4>Receitas do Mês</h4>
+                <p id="receitasMes" class="valor">R$ 0.00</p>
+            </div>
+
+            <div class="card-pequeno card-despesa">
+                <h4>Despesas do Mês</h4>
+                <p id="despesasMes" class="valor">R$ 0.00</p>
+            </div>
+
+            <div class="card-pequeno card-saldo">
+                <h4>Saldo do Mês</h4>
+                <p id="saldoMes" class="valor">R$ 0.00</p>
+            </div>
+
+            <div class="card-pequeno card-pendente">
+                <h4>Pendentes</h4>
+                <p id="pendenteMes" class="valor">R$ 0.00</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lançamentos Pendentes -->
+    <div class="lancamentos-pendentes">
+        <h2>⏳ Todos os Lançamentos Pendentes</h2>
+        
+        <div style="overflow-x: auto;">
+            <table id="tabelaPendentes" class="tabela-pendentes" style="width: 100%; min-width: 1000px;">
+                <thead>
+                    <tr>
+                        <th>Mês</th>
+                        <th>Descrição</th>
+                        <th>Valor Bruto</th>
+                        <th>Desconto</th>
+                        <th>Acréscimo</th>
+                        <th>Valor Líquido</th>
+                        <th>Vencimento</th>
+                        <th>Categoria</th>
+                        <th>Fornecedor</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoPendentes">
+                    <!-- Preenchido por JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="mensagemVaziaPendentes" class="mensagem-vazia">
+            Nenhum lançamento pendente!
+        </div>
+    </div>
+</div>
 
