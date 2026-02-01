@@ -1570,6 +1570,9 @@ function renderizarDashboard() {
     
     // Renderizar tabela de pendentes
     renderizarPendentes();
+    
+    // Renderizar gráfico de saldo dos últimos 12 meses
+    renderizarGraficoSaldoMeses();
 }
 
 // Calcular resumo geral (todas as movimentações)
@@ -1748,6 +1751,190 @@ function renderizarPendentes() {
         `;
         
         tbody.appendChild(linha);
+    });
+}
+
+// Calcular saldos dos últimos 12 meses
+function calcularSaldoUltimos12Meses() {
+    const itens = carregarItensMovimentacao();
+    const categorias = carregarCategorias();
+    const lancamentos = carregarLancamentos();
+    const agora = new Date();
+    const dataAtual = new Date(agora.getFullYear(), agora.getMonth(), 1);
+    
+    // Criar array com 12 meses
+    const meses = [];
+    for (let i = 11; i >= 0; i--) {
+        const data = new Date(dataAtual);
+        data.setMonth(data.getMonth() - i);
+        meses.push({
+            mes: data.getMonth() + 1,
+            ano: data.getFullYear(),
+            receitas: 0,
+            despesas: 0,
+            saldo: 0
+        });
+    }
+    
+    // Processar itens
+    itens.forEach(item => {
+        if (!item.dataVencimento) return; // Pular se não houver data
+        
+        // Extrair mês e ano da data de vencimento (formato: YYYY-MM-DD ou DD-MM-YYYY)
+        let mes, ano;
+        
+        if (item.dataVencimento.includes('-')) {
+            const partes = item.dataVencimento.split('-');
+            
+            if (partes[0].length === 4) {
+                // Formato YYYY-MM-DD
+                ano = parseInt(partes[0]);
+                mes = parseInt(partes[1]);
+            } else {
+                // Formato DD-MM-YYYY
+                mes = parseInt(partes[1]);
+                ano = parseInt(partes[2]);
+            }
+        } else {
+            return; // Data em formato desconhecido
+        }
+        
+        const valor = item.valorLiquido || item.valor;
+        
+        // Encontrar o mês correspondente
+        const mesObj = meses.find(m => m.mes === mes && m.ano === ano);
+        
+        if (mesObj) {
+            if (item.isAvulso) {
+                // Item avulso
+                if (item.tipo === 'Receita') {
+                    mesObj.receitas += valor;
+                } else if (item.tipo === 'Despesa') {
+                    mesObj.despesas += valor;
+                }
+            } else {
+                // Item vinculado a lançamento
+                const lancamento = lancamentos.find(l => l.id === item.idLancamento);
+                const categoria = categorias.find(c => c.id === lancamento?.categoriaId);
+                
+                if (categoria) {
+                    if (categoria.tipo === 'Receita') {
+                        mesObj.receitas += valor;
+                    } else if (categoria.tipo === 'Despesa') {
+                        mesObj.despesas += valor;
+                    }
+                }
+            }
+        }
+    });
+    
+    // Calcular saldos
+    meses.forEach(m => {
+        m.saldo = m.receitas - m.despesas;
+    });
+    
+    return meses;
+}
+
+// Renderizar gráfico de saldo dos últimos 12 meses
+function renderizarGraficoSaldoMeses() {
+    const canvas = document.getElementById('graficoSaldoMeses');
+    if (!canvas) return;
+    
+    const dados = calcularSaldoUltimos12Meses();
+    
+    // Nomes dos meses em português
+    const nomeMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    
+    // Preparar labels e valores
+    const labels = dados.map(m => `${nomeMeses[m.mes - 1]}/${m.ano}`);
+    const valores = dados.map(m => m.saldo);
+    
+    // Cores: verde para positivo, vermelho para negativo
+    const cores = valores.map(v => v >= 0 ? '#27ae60' : '#e74c3c');
+    
+    // Destruir gráfico anterior se existir
+    if (window.graficoSaldoMesesInstance) {
+        window.graficoSaldoMesesInstance.destroy();
+    }
+    
+    // Criar novo gráfico
+    const ctx = canvas.getContext('2d');
+    window.graficoSaldoMesesInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Saldo Mensal (R$)',
+                data: valores,
+                backgroundColor: cores,
+                borderColor: cores,
+                borderWidth: 1,
+                borderRadius: 6,
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        color: '#333',
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `Saldo: R$ ${context.parsed.y.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: Math.max(0, ...valores) * 1.2,
+                    min: Math.min(0, ...valores) * 1.2,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toFixed(0);
+                        },
+                        font: {
+                            size: 12
+                        },
+                        color: '#666'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: true
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: 12
+                        },
+                        color: '#666'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
     });
 }
 

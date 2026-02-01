@@ -896,3 +896,24 @@ section {
         font-size: 18px;
     }
 }
+
+/* ==================== GRÁFICO ==================== */
+
+.grafico-container {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+}
+
+.grafico-container h2 {
+    color: #1a5f4e;
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+#graficoSaldoMeses {
+    max-width: 100%;
+}
