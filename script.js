@@ -665,10 +665,14 @@ function abrirModalNovoLancamento() {
     const titulo = document.getElementById('modalTituloLancamento');
     if (titulo) titulo.textContent = 'Adicionar Lançamento';
 
-    // Limpar campos do modal
+    // Limpar/resetar campos do modal
     if (document.getElementById('editValorBruto')) document.getElementById('editValorBruto').value = '';
-    if (document.getElementById('editStatus')) document.getElementById('editStatus').checked = false;
-    if (document.getElementById('editDataLancamento')) document.getElementById('editDataLancamento').value = '';
+    if (document.getElementById('editStatus')) document.getElementById('editStatus').checked = true; // Ativo por padrão
+    // Setar data de lançamento como hoje
+    if (document.getElementById('editDataLancamento')) {
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('editDataLancamento').value = hoje;
+    }
     if (document.getElementById('editCategoria')) document.getElementById('editCategoria').value = '';
     if (document.getElementById('editFornecedor')) document.getElementById('editFornecedor').value = '';
     if (document.getElementById('editRecorrencia')) document.getElementById('editRecorrencia').value = 'avulso';
