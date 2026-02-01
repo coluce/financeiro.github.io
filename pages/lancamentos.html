@@ -2,70 +2,8 @@
     <h1>💰 Lançamentos</h1>
 
     <div class="form-adicionar">
-        <h2>Adicionar Novo Lançamento</h2>
-        <form id="formLancamento" onsubmit="adicionarLancamento(event)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label for="inputValorBruto">Valor Bruto:</label>
-                    <input type="number" id="inputValorBruto" step="0.01" placeholder="0.00" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="inputDesconto">Desconto:</label>
-                    <input type="number" id="inputDesconto" step="0.01" placeholder="0.00" value="0">
-                </div>
-
-                <div class="form-group">
-                    <label for="inputAcrescimo">Acréscimo:</label>
-                    <input type="number" id="inputAcrescimo" step="0.01" placeholder="0.00" value="0">
-                </div>
-
-                <div class="form-group">
-                    <label for="inputValorLiquido">Valor Líquido (calculado):</label>
-                    <input type="number" id="inputValorLiquido" step="0.01" readonly style="background-color: #f0f0f0;">
-                </div>
-
-                <div class="form-group">
-                    <label for="selectStatus">Status:</label>
-                    <select id="selectStatus" required onchange="atualizarVisibilidadePagamento()">
-                        <option value="">-- Selecione --</option>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Pago">Pago</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="inputDataLancamento">Data de Lançamento:</label>
-                    <input type="date" id="inputDataLancamento" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="inputDataVencimento">Data de Vencimento:</label>
-                    <input type="date" id="inputDataVencimento" required>
-                </div>
-
-                <div class="form-group" id="grupoPagamento" style="display: none;">
-                    <label for="inputDataPagamento">Data de Pagamento:</label>
-                    <input type="date" id="inputDataPagamento">
-                </div>
-
-                <div class="form-group">
-                    <label for="selectCategoria">Categoria:</label>
-                    <select id="selectCategoria" required>
-                        <option value="">-- Selecione uma categoria --</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="selectFornecedor">Fornecedor:</label>
-                    <select id="selectFornecedor" required>
-                        <option value="">-- Selecione um fornecedor --</option>
-                    </select>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Adicionar Lançamento</button>
-        </form>
+        <h2>Lançamentos</h2>
+        <button class="btn btn-primary" onclick="abrirModalNovoLancamento()">Novo Lançamento</button>
     </div>
 
     <div class="tabela-container">
@@ -75,14 +13,10 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Valor Bruto</th>
-                        <th>Desconto</th>
-                        <th>Acréscimo</th>
-                        <th>Valor Líquido</th>
+                        <th>Valor</th>
                         <th>Status</th>
                         <th>Data Lançamento</th>
-                        <th>Data Vencimento</th>
-                        <th>Data Pagamento</th>
+                        <th>Recorrência</th>
                         <th>Categoria</th>
                         <th>Fornecedor</th>
                         <th>Ações</th>
@@ -103,7 +37,7 @@
 <div id="modalEdicaoLancamento" class="modal-overlay" onclick="fecharModalEdicaoLancamento(event)">
     <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
-            <h2>Editar Lançamento</h2>
+            <h2 id="modalTituloLancamento">Editar Lançamento</h2>
             <button class="modal-close" onclick="fecharModalEdicaoLancamento()">&times;</button>
         </div>
 
@@ -114,42 +48,20 @@
                     <input type="number" id="editValorBruto" step="0.01" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="editDesconto">Desconto:</label>
-                    <input type="number" id="editDesconto" step="0.01" value="0">
-                </div>
-
-                <div class="form-group">
-                    <label for="editAcrescimo">Acréscimo:</label>
-                    <input type="number" id="editAcrescimo" step="0.01" value="0">
-                </div>
-
-                <div class="form-group">
-                    <label for="editValorLiquido">Valor Líquido (calculado):</label>
-                    <input type="number" id="editValorLiquido" step="0.01" readonly style="background-color: #f0f0f0;">
-                </div>
 
                 <div class="form-group">
                     <label for="editStatus">Status:</label>
-                    <select id="editStatus" required onchange="atualizarVisibilidadePagamentoModal()">
-                        <option value="Pendente">Pendente</option>
-                        <option value="Pago">Pago</option>
-                    </select>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="statusInativo">Inativo</span>
+                        <input type="checkbox" id="editStatus" class="toggle-switch">
+                        <span id="statusAtivo">Ativo</span>
+                    </div>
+                    <input type="hidden" id="editStatusValue" value="Inativo">
                 </div>
 
                 <div class="form-group">
                     <label for="editDataLancamento">Data de Lançamento:</label>
                     <input type="date" id="editDataLancamento" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="editDataVencimento">Data de Vencimento:</label>
-                    <input type="date" id="editDataVencimento" required>
-                </div>
-
-                <div class="form-group" id="grupoEditPagamento" style="display: none;">
-                    <label for="editDataPagamento">Data de Pagamento:</label>
-                    <input type="date" id="editDataPagamento">
                 </div>
 
                 <div class="form-group">
@@ -161,6 +73,20 @@
                     <label for="editFornecedor">Fornecedor:</label>
                     <select id="editFornecedor" required></select>
                 </div>
+                
+                <div class="form-group">
+                    <label for="editRecorrencia">Recorrência:</label>
+                    <select id="editRecorrencia" onchange="atualizarVisibilidadeRecorrenciaModal()">
+                        <option value="avulso">Avulso</option>
+                        <option value="parcelado">Parcelado</option>
+                        <option value="recorrente">Recorrente (mensal)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="grupoEditRecorrencia" style="display: none;">
+                    <label for="editRecorrencias">Número de vezes (deixe vazio para repetir indefinidamente):</label>
+                    <input type="number" id="editRecorrencias" min="1" placeholder="Ex: 12">
+                </div>
             </div>
 
             <div class="modal-footer">
@@ -171,93 +97,3 @@
     </div>
 </div>
 
-<script>
-    // Calcular valor líquido automaticamente
-    function calcularValorLiquido() {
-        const valorBruto = parseFloat(document.getElementById('inputValorBruto').value) || 0;
-        const desconto = parseFloat(document.getElementById('inputDesconto').value) || 0;
-        const acrescimo = parseFloat(document.getElementById('inputAcrescimo').value) || 0;
-        const valorLiquido = valorBruto - desconto + acrescimo;
-        document.getElementById('inputValorLiquido').value = valorLiquido.toFixed(2);
-    }
-
-    // Listeners para recalcular
-    document.getElementById('inputValorBruto').addEventListener('change', calcularValorLiquido);
-    document.getElementById('inputDesconto').addEventListener('change', calcularValorLiquido);
-    document.getElementById('inputAcrescimo').addEventListener('change', calcularValorLiquido);
-
-    // Mostrar/esconder data de pagamento
-    function atualizarVisibilidadePagamento() {
-        const status = document.getElementById('selectStatus').value;
-        const grupo = document.getElementById('grupoPagamento');
-        const inputData = document.getElementById('inputDataPagamento');
-        if (status === 'Pago') {
-            grupo.style.display = 'block';
-            inputData.required = true;
-        } else {
-            grupo.style.display = 'none';
-            inputData.required = false;
-        }
-    }
-
-    function atualizarVisibilidadePagamentoModal() {
-        const status = document.getElementById('editStatus').value;
-        const grupo = document.getElementById('grupoEditPagamento');
-        const inputData = document.getElementById('editDataPagamento');
-        if (status === 'Pago') {
-            grupo.style.display = 'block';
-            inputData.required = true;
-        } else {
-            grupo.style.display = 'none';
-            inputData.required = false;
-        }
-    }
-
-    // Preencher selects de categoria e fornecedor
-    function preencherSelectsCategoriaFornecedor() {
-        const categorias = carregarCategorias();
-        const fornecedores = carregarFornecedores();
-
-        [document.getElementById('selectCategoria'), document.getElementById('editCategoria')].forEach(select => {
-            if (!select) return;
-            select.innerHTML = '<option value="">-- Selecione uma categoria --</option>';
-            categorias.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat.id;
-                option.textContent = cat.nome;
-                select.appendChild(option);
-            });
-        });
-
-        [document.getElementById('selectFornecedor'), document.getElementById('editFornecedor')].forEach(select => {
-            if (!select) return;
-            select.innerHTML = '<option value="">-- Selecione um fornecedor --</option>';
-            fornecedores.forEach(f => {
-                const option = document.createElement('option');
-                option.value = f.id;
-                option.textContent = f.nome;
-                select.appendChild(option);
-            });
-        });
-    }
-
-    // Calcular valor líquido no modal
-    function calcularValorLiquidoModal() {
-        const valorBruto = parseFloat(document.getElementById('editValorBruto').value) || 0;
-        const desconto = parseFloat(document.getElementById('editDesconto').value) || 0;
-        const acrescimo = parseFloat(document.getElementById('editAcrescimo').value) || 0;
-        const valorLiquido = valorBruto - desconto + acrescimo;
-        const campo = document.getElementById('editValorLiquido');
-        if (campo) campo.value = valorLiquido.toFixed(2);
-    }
-
-    // Listeners para calcular valor líquido no modal
-    const editValorBruto = document.getElementById('editValorBruto');
-    const editDesconto = document.getElementById('editDesconto');
-    const editAcrescimo = document.getElementById('editAcrescimo');
-    
-    if (editValorBruto) editValorBruto.addEventListener('change', calcularValorLiquidoModal);
-    if (editDesconto) editDesconto.addEventListener('change', calcularValorLiquidoModal);
-    if (editAcrescimo) editAcrescimo.addEventListener('change', calcularValorLiquidoModal);
-
-</script>

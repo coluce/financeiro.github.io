@@ -451,3 +451,37 @@ section {
         font-size: 18px;
     }
 }
+
+/* Toggle Switch para Status */
+.toggle-switch {
+    appearance: none;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s ease;
+    position: relative;
+}
+
+.toggle-switch:checked {
+    background-color: #4CAF50;
+}
+
+.toggle-switch::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: left 0.3s ease;
+}
+
+.toggle-switch:checked::before {
+    left: 28px;
+}

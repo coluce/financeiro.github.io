@@ -499,17 +499,13 @@ function renderizarTabelaLancamentos() {
 
     lancamentos.forEach(l => {
         const linha = document.createElement('tr');
-        const badgeStatus = l.status === 'Pago' ? 'badge-receita' : 'badge-despesa';
+        const badgeStatus = l.status === 'Ativo' ? 'badge-receita' : 'badge-despesa';
         linha.innerHTML = `
             <td>${l.id}</td>
             <td>R$ ${parseFloat(l.valorBruto).toFixed(2)}</td>
-            <td>R$ ${parseFloat(l.desconto).toFixed(2)}</td>
-            <td>R$ ${parseFloat(l.acrescimo).toFixed(2)}</td>
-            <td><strong>R$ ${parseFloat(l.valorLiquido).toFixed(2)}</strong></td>
             <td><span class="badge ${badgeStatus}">${l.status}</span></td>
             <td>${new Date(l.dataLancamento).toLocaleDateString('pt-BR')}</td>
-            <td>${new Date(l.dataVencimento).toLocaleDateString('pt-BR')}</td>
-            <td>${l.dataPagamento ? new Date(l.dataPagamento).toLocaleDateString('pt-BR') : '-'}</td>
+            <td>${formatarRecorrencia(l)}</td>
             <td>${obterNomeCategoria(l.categoriaId)}</td>
             <td>${obterNomeFornecedor(l.fornecedorId)}</td>
             <td>
@@ -521,19 +517,28 @@ function renderizarTabelaLancamentos() {
     });
 }
 
+// Formatar a descrição da recorrência para exibição
+function formatarRecorrencia(lancamento) {
+    const tipo = lancamento.recorrenciaTipo || 'avulso';
+    const count = lancamento.recorrenciaCount;
+    if (tipo === 'avulso') return 'Avulso';
+    if (tipo === 'parcelado') return count ? `Parcelado (${count}x)` : 'Parcelado';
+    if (tipo === 'recorrente') return count ? `Recorrente (${count}x)` : 'Recorrente (mensal)';
+    return 'Avulso';
+}
+
 // Adiciona um novo lançamento
 function adicionarLancamento(event) {
     event.preventDefault();
 
     const valorBruto = parseFloat(document.getElementById('inputValorBruto').value);
-    const desconto = parseFloat(document.getElementById('inputDesconto').value) || 0;
-    const acrescimo = parseFloat(document.getElementById('inputAcrescimo').value) || 0;
     const status = document.getElementById('selectStatus').value;
     const dataLancamento = document.getElementById('inputDataLancamento').value;
-    const dataVencimento = document.getElementById('inputDataVencimento').value;
-    const dataPagamento = document.getElementById('inputDataPagamento').value;
     const categoriaId = parseInt(document.getElementById('selectCategoria').value);
     const fornecedorId = parseInt(document.getElementById('selectFornecedor').value);
+    const recorrenciaTipo = document.getElementById('selectRecorrencia') ? document.getElementById('selectRecorrencia').value : 'avulso';
+    const recorrenciasVal = document.getElementById('inputRecorrencias') ? document.getElementById('inputRecorrencias').value : '';
+    const recorrenciaCount = recorrenciasVal ? parseInt(recorrenciasVal) : null;
 
     // Validações
     if (!valorBruto || valorBruto <= 0) {
@@ -551,15 +556,7 @@ function adicionarLancamento(event) {
         return;
     }
 
-    if (!dataVencimento) {
-        alert('Selecione a data de vencimento!');
-        return;
-    }
-
-    if (status === 'Pago' && !dataPagamento) {
-        alert('Data de pagamento é obrigatória para lançamentos pagos!');
-        return;
-    }
+    // dataLancamento é obrigatória já validada mais acima
 
     if (!categoriaId) {
         alert('Selecione uma categoria!');
@@ -575,13 +572,10 @@ function adicionarLancamento(event) {
     const novoLancamento = {
         id: obterProximoIdLancamento(),
         valorBruto: valorBruto,
-        desconto: desconto,
-        acrescimo: acrescimo,
-        valorLiquido: valorBruto - desconto + acrescimo,
         status: status,
         dataLancamento: dataLancamento,
-        dataVencimento: dataVencimento,
-        dataPagamento: dataPagamento || null,
+        recorrenciaTipo: recorrenciaTipo,
+        recorrenciaCount: recorrenciaCount,
         categoriaId: categoriaId,
         fornecedorId: fornecedorId
     };
@@ -593,8 +587,12 @@ function adicionarLancamento(event) {
 
     // Limpar formulário
     document.getElementById('formLancamento').reset();
-    document.getElementById('inputValorLiquido').value = '0.00';
-    document.getElementById('grupoPagamento').style.display = 'none';
+    if (document.getElementById('grupoRecorrencia')) {
+        document.getElementById('grupoRecorrencia').style.display = 'none';
+    }
+    if (document.getElementById('inputRecorrencias')) {
+        document.getElementById('inputRecorrencias').value = '';
+    }
 
     // Atualizar tabela
     renderizarTabelaLancamentos();
@@ -612,20 +610,29 @@ function abrirModalEdicaoLancamento(id) {
 
     idEmEdicaoLancamento = id;
     
+    // Preencher selects primeiro (popula as opções)
+    preencherSelectsCategoriaFornecedor();
+
     // Preencher campos
+    const titulo = document.getElementById('modalTituloLancamento');
+    if (titulo) titulo.textContent = 'Editar Lançamento';
     document.getElementById('editValorBruto').value = lancamento.valorBruto;
-    document.getElementById('editDesconto').value = lancamento.desconto;
-    document.getElementById('editAcrescimo').value = lancamento.acrescimo;
-    document.getElementById('editValorLiquido').value = lancamento.valorLiquido.toFixed(2);
-    document.getElementById('editStatus').value = lancamento.status;
-    document.getElementById('editDataLancamento').value = lancamento.dataLancamento;
-    document.getElementById('editDataVencimento').value = lancamento.dataVencimento;
-    document.getElementById('editDataPagamento').value = lancamento.dataPagamento || '';
+    const statusCheckbox = document.getElementById('editStatus');
+    if (statusCheckbox) statusCheckbox.checked = lancamento.status === 'Ativo';
+    document.getElementById('editDataLancamento').value = lancamento.dataLancamento || '';
+    // Setar categoria e fornecedor DEPOIS que as opções estão preenchidas
     document.getElementById('editCategoria').value = lancamento.categoriaId;
     document.getElementById('editFornecedor').value = lancamento.fornecedorId;
+    // Preencher recorrência
+    if (document.getElementById('editRecorrencia')) {
+        document.getElementById('editRecorrencia').value = lancamento.recorrenciaTipo || 'avulso';
+    }
+    if (document.getElementById('editRecorrencias')) {
+        document.getElementById('editRecorrencias').value = lancamento.recorrenciaCount || '';
+    }
 
-    // Mostrar/esconder data de pagamento
-    atualizarVisibilidadePagamentoModal();
+    // Mostrar/esconder campos de recorrência no modal
+    if (typeof atualizarVisibilidadeRecorrenciaModal === 'function') atualizarVisibilidadeRecorrenciaModal();
 
     const modal = document.getElementById('modalEdicaoLancamento');
     if (modal) {
@@ -653,17 +660,35 @@ function fecharModalEdicaoLancamento(event) {
     }
 }
 
-// Salva a edição de um lançamento
+function abrirModalNovoLancamento() {
+    idEmEdicaoLancamento = null;
+    const titulo = document.getElementById('modalTituloLancamento');
+    if (titulo) titulo.textContent = 'Adicionar Lançamento';
+
+    // Limpar campos do modal
+    if (document.getElementById('editValorBruto')) document.getElementById('editValorBruto').value = '';
+    if (document.getElementById('editStatus')) document.getElementById('editStatus').checked = false;
+    if (document.getElementById('editDataLancamento')) document.getElementById('editDataLancamento').value = '';
+    if (document.getElementById('editCategoria')) document.getElementById('editCategoria').value = '';
+    if (document.getElementById('editFornecedor')) document.getElementById('editFornecedor').value = '';
+    if (document.getElementById('editRecorrencia')) document.getElementById('editRecorrencia').value = 'avulso';
+    if (document.getElementById('editRecorrencias')) document.getElementById('editRecorrencias').value = '';
+
+    preencherSelectsCategoriaFornecedor();
+    if (typeof atualizarVisibilidadeRecorrenciaModal === 'function') atualizarVisibilidadeRecorrenciaModal();
+
+    const modal = document.getElementById('modalEdicaoLancamento');
+    if (modal) modal.style.display = 'flex';
+}
+
+// Salva a edição de um lançamento (ou cria se for novo)
 function salvarEdicaoLancamento(event) {
     event.preventDefault();
 
     const valorBruto = parseFloat(document.getElementById('editValorBruto').value);
-    const desconto = parseFloat(document.getElementById('editDesconto').value) || 0;
-    const acrescimo = parseFloat(document.getElementById('editAcrescimo').value) || 0;
-    const status = document.getElementById('editStatus').value;
+    const isAtivo = document.getElementById('editStatus').checked;
+    const status = isAtivo ? 'Ativo' : 'Inativo';
     const dataLancamento = document.getElementById('editDataLancamento').value;
-    const dataVencimento = document.getElementById('editDataVencimento').value;
-    const dataPagamento = document.getElementById('editDataPagamento').value;
     const categoriaId = parseInt(document.getElementById('editCategoria').value);
     const fornecedorId = parseInt(document.getElementById('editFornecedor').value);
 
@@ -673,27 +698,38 @@ function salvarEdicaoLancamento(event) {
         return;
     }
 
-    if (status === 'Pago' && !dataPagamento) {
-        alert('Data de pagamento é obrigatória para lançamentos pagos!');
-        return;
-    }
+    // sem data de pagamento no fluxo atual
 
     // Atualizar lançamento
     const lancamentos = carregarLancamentos();
     const index = lancamentos.findIndex(l => l.id === idEmEdicaoLancamento);
 
+    const editRecorrenciaTipo = document.getElementById('editRecorrencia') ? document.getElementById('editRecorrencia').value : 'avulso';
+    const editRecorrenciasVal = document.getElementById('editRecorrencias') ? document.getElementById('editRecorrencias').value : '';
+    const editRecorrenciaCount = editRecorrenciasVal ? parseInt(editRecorrenciasVal) : null;
+
     if (index !== -1) {
         lancamentos[index].valorBruto = valorBruto;
-        lancamentos[index].desconto = desconto;
-        lancamentos[index].acrescimo = acrescimo;
-        lancamentos[index].valorLiquido = valorBruto - desconto + acrescimo;
         lancamentos[index].status = status;
         lancamentos[index].dataLancamento = dataLancamento;
-        lancamentos[index].dataVencimento = dataVencimento;
-        lancamentos[index].dataPagamento = dataPagamento || null;
+        lancamentos[index].recorrenciaTipo = editRecorrenciaTipo;
+        lancamentos[index].recorrenciaCount = editRecorrenciaCount;
         lancamentos[index].categoriaId = categoriaId;
         lancamentos[index].fornecedorId = fornecedorId;
-        
+        salvarLancamentos(lancamentos);
+    } else {
+        // criar novo
+        const novoLancamento = {
+            id: obterProximoIdLancamento(),
+            valorBruto: valorBruto,
+            status: status,
+            dataLancamento: dataLancamento,
+            recorrenciaTipo: editRecorrenciaTipo,
+            recorrenciaCount: editRecorrenciaCount,
+            categoriaId: categoriaId,
+            fornecedorId: fornecedorId
+        };
+        lancamentos.push(novoLancamento);
         salvarLancamentos(lancamentos);
     }
 
@@ -750,4 +786,49 @@ function preencherSelectsCategoriaFornecedor() {
             select.appendChild(option);
         });
     });
+}
+
+// Mostrar/esconder campos de recorrência (disponível globalmente porque este arquivo é carregado uma vez)
+function atualizarVisibilidadeRecorrencia() {
+    const tipoEl = document.getElementById('selectRecorrencia');
+    if (!tipoEl) return;
+    const tipo = tipoEl.value;
+    const grupo = document.getElementById('grupoRecorrencia');
+    const input = document.getElementById('inputRecorrencias');
+    const label = document.querySelector('label[for="inputRecorrencias"]');
+    if (tipo === 'parcelado') {
+        if (grupo) grupo.style.display = 'block';
+        if (input) input.required = true;
+        if (label) label.textContent = 'Quantidade de parcelas:';
+    } else if (tipo === 'recorrente') {
+        if (grupo) grupo.style.display = 'block';
+        if (input) input.required = false;
+        if (label) label.textContent = 'Número de meses (opcional):';
+    } else {
+        if (grupo) grupo.style.display = 'none';
+        if (input) { input.required = false; input.value = ''; }
+        if (label) label.textContent = 'Número de vezes (deixe vazio para repetir indefinidamente):';
+    }
+}
+
+function atualizarVisibilidadeRecorrenciaModal() {
+    const tipoEl = document.getElementById('editRecorrencia');
+    if (!tipoEl) return;
+    const tipo = tipoEl.value;
+    const grupo = document.getElementById('grupoEditRecorrencia');
+    const input = document.getElementById('editRecorrencias');
+    const label = document.querySelector('label[for="editRecorrencias"]');
+    if (tipo === 'parcelado') {
+        if (grupo) grupo.style.display = 'block';
+        if (input) input.required = true;
+        if (label) label.textContent = 'Quantidade de parcelas:';
+    } else if (tipo === 'recorrente') {
+        if (grupo) grupo.style.display = 'block';
+        if (input) input.required = false;
+        if (label) label.textContent = 'Número de meses (opcional):';
+    } else {
+        if (grupo) grupo.style.display = 'none';
+        if (input) { input.required = false; input.value = ''; }
+        if (label) label.textContent = 'Número de vezes (deixe vazio para repetir indefinidamente):';
+    }
 }
