@@ -27,6 +27,11 @@ async function carregarPagina(pagina) {
         const html = await resposta.text();
         conteudo.innerHTML = html;
 
+        // Atualizar item ativo no menu (estilo Trackline)
+        document.querySelectorAll('.nav-item').forEach(el => {
+            el.classList.toggle('active', el.getAttribute('data-page') === pagina);
+        });
+
         // Inicializar categorias e fornecedores quando suas páginas forem carregadas
         if (pagina === 'categorias') {
             inicializarCategorias();
