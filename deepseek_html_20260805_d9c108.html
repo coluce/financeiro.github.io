@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌿 Cunha - SP | Turismo & Encantos</title>
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      background: #f9f6f0;
+      color: #2d3e3f;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* cabeçalho / hero */
+    .hero {
+      background: linear-gradient(135deg, #1e3c3a 0%, #2b5e5a 100%);
+      color: white;
+      padding: 3rem 0 4rem;
+      text-align: center;
+      border-bottom: 6px solid #d9b382;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-size: 3.4rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .hero h1 i {
+      color: #f5d79a;
+      margin-right: 10px;
+    }
+
+    .hero .subtitle {
+      font-size: 1.4rem;
+      font-weight: 300;
+      background: rgba(255,255,240,0.15);
+      display: inline-block;
+      padding: 0.5rem 2rem;
+      border-radius: 50px;
+      backdrop-filter: blur(4px);
+      margin-top: 0.5rem;
+    }
+
+    .hero .tagline {
+      margin-top: 1.8rem;
+      font-size: 1.2rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      opacity: 0.9;
+      background: rgba(0,0,0,0.2);
+      padding: 0.8rem 1.5rem;
+      border-radius: 60px;
+      backdrop-filter: blur(2px);
+    }
+
+    .hero .tagline i {
+      margin: 0 6px;
+      color: #f5d79a;
+    }
+
+    /* seção sobre */
+    .about {
+      background: white;
+      padding: 3rem 0;
+      border-bottom: 1px solid #e0d6c8;
+    }
+
+    .about-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .about-text {
+      flex: 1 1 300px;
+    }
+
+    .about-text h2 {
+      font-size: 2.2rem;
+      color: #1e3c3a;
+      margin-bottom: 1rem;
+      border-left: 8px solid #d9b382;
+      padding-left: 1.2rem;
+    }
+
+    .about-text p {
+      font-size: 1.1rem;
+      color: #3e4f4a;
+      margin-bottom: 1rem;
+    }
+
+    .about-stats {
+      flex: 1 1 250px;
+      background: #f2ede6;
+      padding: 2rem 1.8rem;
+      border-radius: 28px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+
+    .about-stats .stat {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      font-size: 1.1rem;
+    }
+
+    .about-stats .stat i {
+      font-size: 2rem;
+      width: 2.8rem;
+      color: #2b5e5a;
+    }
+
+    .about-stats .stat span {
+      font-weight: 600;
+      color: #1e3c3a;
+    }
+
+    /* cartões de atrativos */
+    .attractions {
+      padding: 4rem 0;
+      background: #f2ede6;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.4rem;
+      color: #1e3c3a;
+      margin-bottom: 2.5rem;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      display: block;
+      width: 80px;
+      height: 4px;
+      background: #d9b382;
+      margin: 0.6rem auto 0;
+      border-radius: 4px;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 32px;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-align: center;
+      border-bottom: 6px solid #d9b382;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .card i {
+      font-size: 3.2rem;
+      color: #2b5e5a;
+      background: #e6edea;
+      padding: 0.8rem;
+      border-radius: 60px;
+      margin-bottom: 1rem;
+    }
+
+    .card h3 {
+      font-size: 1.6rem;
+      margin-bottom: 0.6rem;
+      color: #1e3c3a;
+    }
+
+    .card p {
+      color: #4f625c;
+      font-size: 1rem;
+    }
+
+    .card .badge {
+      display: inline-block;
+      background: #d9b382;
+      color: #1e2c27;
+      font-weight: 600;
+      font-size: 0.75rem;
+      padding: 0.3rem 1.2rem;
+      border-radius: 30px;
+      margin-top: 0.8rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* destaques cultura / gastronomia */
+    .culture {
+      background: white;
+      padding: 4rem 0;
+    }
+
+    .culture-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    .culture-item {
+      flex: 1 1 280px;
+      background: #faf7f2;
+      padding: 1.8rem 2rem;
+      border-radius: 40px;
+      border-left: 8px solid #2b5e5a;
+      transition: 0.2s;
+    }
+
+    .culture-item i {
+      color: #2b5e5a;
+      font-size: 2.2rem;
+      margin-right: 0.8rem;
+    }
+
+    .culture-item h4 {
+      display: inline-block;
+      font-size: 1.5rem;
+      color: #1e3c3a;
+      margin-bottom: 0.2rem;
+    }
+
+    .culture-item p {
+      margin-top: 0.5rem;
+      color: #3f5952;
+    }
+
+    /* info prática */
+    .info {
+      background: #1e3c3a;
+      color: #f0ebe3;
+      padding: 3.5rem 0;
+    }
+
+    .info-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .info-box {
+      flex: 1 1 200px;
+    }
+
+    .info-box i {
+      font-size: 2rem;
+      color: #d9b382;
+      margin-bottom: 0.5rem;
+    }
+
+    .info-box h4 {
+      font-size: 1.3rem;
+      color: #f5e8d9;
+      margin-bottom: 0.2rem;
+    }
+
+    .info-box p {
+      opacity: 0.85;
+      font-size: 1rem;
+    }
+
+    .footer {
+      background: #122926;
+      color: #b8cdc5;
+      text-align: center;
+      padding: 1.8rem 0;
+      font-size: 0.95rem;
+    }
+
+    .footer i {
+      color: #d9b382;
+      margin: 0 4px;
+    }
+
+    .footer a {
+      color: #d9b382;
+      text-decoration: none;
+    }
+
+    @media (max-width: 650px) {
+      .hero h1 {
+        font-size: 2.4rem;
+      }
+      .hero .subtitle {
+        font-size: 1.1rem;
+        padding: 0.3rem 1.2rem;
+      }
+      .about-stats {
+        padding: 1.5rem;
+      }
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <h1><i class="fas fa-mountain"></i> Cunha</h1>
+      <div class="subtitle">Serra da Mantiqueira · SP</div>
+      <div class="tagline">
+        <i class="fas fa-leaf"></i> Natureza, arte e sabor <i class="fas fa-utensils"></i> <br>
+        <span style="font-size: 0.9rem; opacity: 0.8;">Onde a serra encontra o aconchego</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOBRE / DADOS RÁPIDOS -->
+  <section class="about">
+    <div class="container about-grid">
+      <div class="about-text">
+        <h2>Paraíso da Mantiqueira</h2>
+        <p><strong>Cunha</strong> é um município paulista que encanta por sua tranquilidade, paisagens de montanha e rica cultura. Situada a mais de 900 metros de altitude, a cidade respira ar puro e oferece um dos melhores climas do estado.</p>
+        <p>Com ruas de paralelepípedo, casarões coloniais e um comércio acolhedor, Cunha é destino certo para quem busca <strong>ecoturismo, gastronomia típica e artesanato</strong> em meio à Mata Atlântica.</p>
+      </div>
+      <div class="about-stats">
+        <div class="stat"><i class="fas fa-map-pin"></i> <span>Altitude:</span> 950 m</div>
+        <div class="stat"><i class="fas fa-thermometer-half"></i> <span>Clima:</span> ameno, 13°C – 24°C</div>
+        <div class="stat"><i class="fas fa-tree"></i> <span>Parques:</span> Parque Estadual da Serra do Mar</div>
+        <div class="stat"><i class="fas fa-users"></i> <span>População:</span> ~22 mil</div>
+        <div class="stat"><i class="fas fa-wine-bottle"></i> <span>Famoso por:</span> cachaça, queijos e cerâmica</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ATRATIVOS PRINCIPAIS -->
+  <section class="attractions">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-camera-retro" style="margin-right: 12px;"></i>Principais atrativos</h2>
+      <div class="card-grid">
+        <div class="card">
+          <i class="fas fa-water"></i>
+          <h3>Cachoeira do Desterro</h3>
+          <p>Uma das mais belas quedas d'água da região, com poço para banho e trilha envolta pela Mata Atlântica.</p>
+          <span class="badge">trilha · banho</span>
+        </div>
+        <div class="card">
+          <i class="fas fa-mountain"></i>
+          <h3>Pedra da Macela</h3>
+          <p>Mirante natural com vista de 360° para a serra e o vale. Lugar perfeito para ver o nascer do sol.</p>
+          <span class="badge">mirante · 1400 m</span>
+        </div>
+        <div class="card">
+          <i class="fas fa-palette"></i>
+          <h3>Ateliê de Cerâmica</h3>
+          <p>Oficinas e galerias que mantêm viva a tradição da cerâmica cunhense, com peças únicas e coloridas.</p>
+          <span class="badge">artesanato · cultura</span>
+        </div>
+        <div class="card">
+          <i class="fas fa-utensils"></i>
+          <h3>Gastronomia típica</h3>
+          <p>Restaurantes com fondue, trutas, queijos e a famosa cachaça de alambique, acompanhados de música ao vivo.</p>
+          <span class="badge">sabores da serra</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CULTURA E GASTRONOMIA -->
+  <section class="culture">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-heart" style="color: #b35e4b; margin-right: 10px;"></i>Viva a cultura cunhense</h2>
+      <div class="culture-flex">
+        <div class="culture-item">
+          <i class="fas fa-cheese"></i>
+          <h4>Queijos & doces</h4>
+          <p>Produção artesanal de queijo minas, doce de leite e compotas. Visite as fazendas e sinta o sabor da roça.</p>
+        </div>
+        <div class="culture-item">
+          <i class="fas fa-flask"></i>
+          <h4>Alambique</h4>
+          <p>Cachaça envelhecida em carvalho e jequitibá. Rota dos alambiques com degustação e história.</p>
+        </div>
+        <div class="culture-item">
+          <i class="fas fa-paint-brush"></i>
+          <h4>Artesanato em fibra</h4>
+          <p>Bolsas, cestos e objetos decorativos feitos com fibras naturais, herança indígena e tropeira.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INFORMAÇÕES PRÁTICAS -->
+  <section class="info">
+    <div class="container info-grid">
+      <div class="info-box">
+        <i class="fas fa-clock"></i>
+        <h4>Melhor época</h4>
+        <p>Outono e inverno (abril a setembro) – clima seco e dias ensolarados. Perfeito para trilhas e fondue.</p>
+      </div>
+      <div class="info-box">
+        <i class="fas fa-route"></i>
+        <h4>Como chegar</h4>
+        <p>De São Paulo: 180 km pela BR-116 (Via Dutra) e SP-171. Ou pela Fernão Dias até Taubaté, depois SP-125.</p>
+      </div>
+      <div class="info-box">
+        <i class="fas fa-bed"></i>
+        <h4>Hospedagem</h4>
+        <p>Pousadas charmosas, hotéis-fazenda e chalés com lareira. Opções para todos os estilos.</p>
+      </div>
+      <div class="info-box">
+        <i class="fas fa-hiking"></i>
+        <h4>Ecoturismo</h4>
+        <p>Trilhas, cachoeiras, rapel, observação de aves e passeios a cavalo. A natureza é a estrela.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <p><i class="fas fa-map-marker-alt"></i> Cunha · São Paulo · Brasil</p>
+      <p style="margin-top: 8px; font-size: 0.9rem;">
+        <i class="fas fa-camera"></i> explore, sinta, viva a serra &nbsp;|&nbsp; 
+        <i class="fas fa-mug-hot"></i> cultura e aconchego
+      </p>
+      <p style="margin-top: 12px; opacity: 0.6; font-size: 0.8rem;">
+        <i class="fas fa-code"></i> landing page inspirada nos encantos de Cunha
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
